@@ -60,7 +60,7 @@ Global GraphicHeight% = GetINIInt(OptionFile, "options", "height")
 Global Depth% = 0, Fullscreen% = GetINIInt(OptionFile, "options", "fullscreen")
 
 Global SelectedGFXMode%
-Global SelectedGFXDriver% = Max(GetINIInt(OptionFile, "options", "gfx driver"), 1)
+Global SelectedGFXDriver% = Min(Max(GetINIInt(OptionFile, "options", "gfx driver"), 1), CountGfxDrivers())
 
 Global fresize_image%, fresize_texture%, fresize_texture2%
 Global fresize_cam%
@@ -118,6 +118,7 @@ Else
 	GraphicWidth = GfxModeWidths(SelectedGFXMode)
 	GraphicHeight = GfxModeHeights(SelectedGFXMode)
 EndIf
+SetGfxDriver(SelectedGFXDriver)
 	
 ;New "fake fullscreen" - ENDSHN Psst, it's called borderless windowed mode --Love Mark,
 If BorderlessWindowed

@@ -1246,7 +1246,6 @@ Function UpdateLauncher()
 			GraphicHeight = GfxModeHeights(SelectedGFXMode)
 			RealGraphicWidth = GraphicWidth
 			RealGraphicHeight = GraphicHeight
-			SetGfxDriver(SelectedGFXDriver)
 			Exit
 		EndIf
 		

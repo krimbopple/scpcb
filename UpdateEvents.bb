@@ -4617,7 +4617,7 @@ Function UpdateEvents()
 							Case 25
 								e\room\NPC[0]=CreateNPC(NPCtypeD, EntityX(e\room\obj)+Cos(e\room\angle-90)*760*RoomScale, 0.35, EntityZ(e\room\obj)+Sin(e\room\angle-90)*760*RoomScale)
 								RotateEntity e\room\NPC[0]\Collider, 0, e\room\angle-200, 0, True
-								tex=LoadTexture("GFX\NPCs\corpse.jpg")
+								tex=LoadTexture_Strict("GFX\NPCs\corpse.jpg")
 								e\room\NPC[0]\texture = "GFX\NPCs\corpse.jpg"
 								EntityTexture e\room\NPC[0]\obj, tex
 								FreeTexture tex

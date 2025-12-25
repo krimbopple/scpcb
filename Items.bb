@@ -37,7 +37,7 @@ Function CreateItemTemplate.ItemTemplates(name$, tempname$, objpath$, invimgpath
 		If it2\objpath = objpath And it2\obj <> 0 Then it\obj = CopyEntity(it2\obj) : it\parentobjpath=it2\objpath : Exit
 	Next
 	
-	If it\obj = 0 Then; it\obj = LoadMesh(objpath)
+	If it\obj = 0 Then
 		If Anim<>0 Then
 			it\obj = LoadAnimMesh_Strict(objpath)
 			it\isAnim=True

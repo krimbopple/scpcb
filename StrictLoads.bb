@@ -14,6 +14,7 @@
 ;likely to cause more crashes than 'clean' CB, as this prevents anyone from loading any assets that don't exist, regardless if they are ever used
 ;added zero checks since blitz load functions return zero sometimes even if the filetype exists
 Function LoadImage_Strict(file$)
+	file = DetermineModdedPath(file)
 	If FileType(file$)<>1 Then RuntimeError "Image " + Chr(34) + file$ + Chr(34) + " missing. "
 	tmp = LoadImage(file$)
 	Return tmp
@@ -69,7 +70,7 @@ Function PlaySound_Strict%(sndHandle%)
 								ConsoleOpen = True
 							EndIf
 						Else
-							If EnableSFXRelease Then snd\internalHandle = LoadSound(snd\name)
+							If EnableSFXRelease Then snd\internalHandle = LoadSound(DetermineModdedPath(snd\name))
 						EndIf
 						If snd\internalHandle = 0 Then
 							CreateConsoleMsg("Failed to load Sound: " + Chr(34) + snd\name + Chr(34))
@@ -95,7 +96,7 @@ Function PlaySound_Strict%(sndHandle%)
 							ConsoleOpen = True
 						EndIf
 					Else
-						If EnableSFXRelease Then snd\internalHandle = LoadSound(snd\name)
+						If EnableSFXRelease Then snd\internalHandle = LoadSound(DetermineModdedPath(snd\name))
 					EndIf
 						
 					If snd\internalHandle = 0 Then
@@ -121,6 +122,7 @@ Function PlaySound_Strict%(sndHandle%)
 End Function
 
 Function LoadSound_Strict(file$)
+	file = DetermineModdedPath(file)
 	Local snd.Sound = New Sound
 	snd\name = file
 	snd\internalHandle = 0
@@ -150,6 +152,7 @@ Type Stream
 End Type
 
 Function StreamSound_Strict(file$,volume#=1.0,custommode=2)
+	file = DetermineModdedPath(file)
 	If FileType(file$)<>1
 		CreateConsoleMsg("Sound " + Chr(34) + file$ + Chr(34) + " not found.")
 		If ConsoleOpening
@@ -286,6 +289,7 @@ Function UpdateStreamSoundOrigin(streamHandle%,cam%,entity%,range#=10,volume#=1.
 End Function
 
 Function LoadMesh_Strict(File$,parent=0)
+	File = DetermineModdedPath(File)
 	If FileType(File$) <> 1 Then RuntimeError "3D Mesh " + File$ + " not found."
 	tmp = LoadMesh(File$, parent)
 	If tmp = 0 Then RuntimeError "Failed to load 3D Mesh: " + File$ 
@@ -293,6 +297,7 @@ Function LoadMesh_Strict(File$,parent=0)
 End Function
 
 Function LoadAnimMesh_Strict(File$,parent=0)
+	File = DetermineModdedPath(File)
 	DebugLog File
 	If FileType(File$) <> 1 Then RuntimeError "3D Animated Mesh " + File$ + " not found."
 	tmp = LoadAnimMesh(File$, parent)
@@ -302,6 +307,7 @@ End Function
 
 ;don't use in LoadRMesh, as Reg does this manually there. If you wanna fuck around with the logic in that function, be my guest 
 Function LoadTexture_Strict(File$,flags=1)
+	File = DetermineModdedPath(File)
 	If FileType(File$) <> 1 Then RuntimeError "Texture " + File$ + " not found."
 	tmp = LoadTexture(File$, flags+(256*(EnableVRam=True)))
 	If tmp = 0 Then RuntimeError "Failed to load Texture: " + File$
@@ -309,6 +315,7 @@ Function LoadTexture_Strict(File$,flags=1)
 End Function
 
 Function LoadBrush_Strict(file$,flags,u#=1.0,v#=1.0)
+	File = DetermineModdedPath(File)
 	If FileType(file$)<>1 Then RuntimeError "Brush Texture " + file$ + "not found."
 	tmp = LoadBrush(file$, flags, u, v)
 	If tmp = 0 Then RuntimeError "Failed to load Brush: " + file$ 
@@ -316,6 +323,7 @@ Function LoadBrush_Strict(file$,flags,u#=1.0,v#=1.0)
 End Function 
 
 Function LoadFont_Strict(file$, height)
+	File = DetermineModdedPath(File)
 	If FileType(file$)<>1 Then RuntimeError "Font " + file$ + " not found."
 	tmp = LoadFont(file, height, bold, italic, underline)  
 	If tmp = 0 Then RuntimeError "Failed to load Font: " + file$ 

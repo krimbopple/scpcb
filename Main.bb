@@ -14,6 +14,9 @@ If Len(InitErrorStr)>0 Then
 	RuntimeError "The following DLLs were not found in the game directory:"+Chr(13)+Chr(10)+Chr(13)+Chr(10)+InitErrorStr
 EndIf
 
+Include "ModManager.bb"
+ReloadMods()
+
 Include "StrictLoads.bb"
 Include "KeyName.bb"
 
@@ -1727,10 +1730,7 @@ Global room2gw_brokendoor% = False
 Global room2gw_x# = 0.0
 Global room2gw_z# = 0.0
 
-Global Menu_TestIMG
 Global menuroomscale# = 8.0 / 2048.0
-
-Global CurrMenu_TestIMG$ = ""
 
 Global ParticleAmount% = GetINIInt(OptionFile,"options","particle amount")
 
@@ -2714,19 +2714,6 @@ MainMenuOpen = True
 
 ;---------------------------------------------------------------------------------------------------
 
-Type MEMORYSTATUS
-    Field dwLength%
-    Field dwMemoryLoad%
-    Field dwTotalPhys%
-    Field dwAvailPhys%
-    Field dwTotalPageFile%
-    Field dwAvailPageFile%
-    Field dwTotalVirtual%
-    Field dwAvailVirtual%
-End Type
-
-Global m.MEMORYSTATUS = New MEMORYSTATUS
-
 FlushKeys()
 FlushMouse()
 
@@ -2815,7 +2802,7 @@ Repeat
 	
 	If MainMenuOpen Then
 		If ShouldPlay = 21 Then
-			EndBreathSFX = LoadSound("SFX\Ending\MenuBreath.ogg")
+			EndBreathSFX = LoadSound_Strict("SFX\Ending\MenuBreath.ogg")
 			EndBreathCHN = PlaySound(EndBreathSFX)
 			ShouldPlay = 66
 		ElseIf ShouldPlay = 66
@@ -11662,36 +11649,6 @@ Function CatchErrors(location$)
 	;	MsgTimer = 20*70
 	;	CloseFile errF
 	;EndIf
-End Function
-
-Function Create3DIcon(width%,height%,modelpath$,modelX#=0,modelY#=0,modelZ#=0,modelPitch#=0,modelYaw#=0,modelRoll#=0,modelscaleX#=1,modelscaleY#=1,modelscaleZ#=1,withfog%=False)
-	Local img% = CreateImage(width,height)
-	Local cam% = CreateCamera()
-	Local model%
-	
-	CameraRange cam,0.01,16
-	CameraViewport cam,0,0,width,height
-	If withfog
-		CameraFogMode cam,1
-		CameraFogRange cam,CameraFogNear,CameraFogFar
-	EndIf
-	
-	If Right(Lower(modelpath$),6)=".rmesh"
-		model = LoadRMesh(modelpath$,Null)
-	Else
-		model = LoadMesh(modelpath$)
-	EndIf
-	ScaleEntity model,modelscaleX,modelscaleY,modelscaleZ
-	PositionEntity model,modelX#,modelY#,modelZ#
-	RotateEntity model,modelPitch#,modelYaw#,modelRoll#
-	
-	;Cls
-	RenderWorld
-	CopyRect 0,0,width,height,0,0,BackBuffer(),ImageBuffer(img)
-	
-	FreeEntity model
-	FreeEntity cam
-	Return img%
 End Function
 
 Function PlayAnnouncement(file$) ;This function streams the announcement currently playing

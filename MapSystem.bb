@@ -214,9 +214,9 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 				If tex[j]=0 Then ;texture is not in cache
 					Select True
 						Case temp1i<3
-							tex[j]=LoadTexture(file+temp1s,1)
+							tex[j]=LoadTexture(DetermineModdedPath(file+temp1s),1)
 						Default
-							tex[j]=LoadTexture(file+temp1s,3)
+							tex[j]=LoadTexture(DetermineModdedPath(file+temp1s),3)
 					End Select
 					
 					If tex[j]<>0 Then
@@ -487,7 +487,7 @@ Function LoadRMesh(file$,rt.RoomTemplates)
 			Case "model"
 				file = ReadString(f)
 				If file<>""
-					Local model = CreatePropObj("GFX\Map\Props\"+file);LoadMesh("GFX\Map\Props\"+file)
+					Local model = CreatePropObj("GFX\Map\Props\"+file)
 					
 					temp1=ReadFloat(f) : temp2=ReadFloat(f) : temp3=ReadFloat(f)
 					PositionEntity model,temp1,temp2,temp3
@@ -4581,8 +4581,8 @@ Function FillRoom(r.Rooms)
 			r\RoomDoors[2]\AutoClose = False
 			r\RoomDoors[3] = CreateDoor(r\zone,r\x + 672.0 * RoomScale,r\y,r\z,0,r,False,False)
 			
-			r\Textures[0] = LoadTexture("GFX\map\1074tex0.jpg") ;blank texture (ripped from official article), seen when you put on 714
-			r\Textures[1] = LoadTexture("GFX\map\1074tex1.jpg") ;texture depicting subject D-9341 (the player)
+			r\Textures[0] = LoadTexture_Strict("GFX\map\1074tex0.jpg") ;blank texture (ripped from official article), seen when you put on 714
+			r\Textures[1] = LoadTexture_Strict("GFX\map\1074tex1.jpg") ;texture depicting subject D-9341 (the player)
 			TextureBlend r\Textures[0], 5 ;texture
 			TextureBlend r\Textures[1], 5 ;blends
 			
@@ -6869,7 +6869,7 @@ Function CreatePropObj(file$)
 	
 	p.Props = New Props
 	p\file = file
-	p\obj = LoadMesh(file)
+	p\obj = LoadMesh_Strict(file)
 	Return p\obj
 End Function
 

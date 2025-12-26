@@ -131,19 +131,14 @@ Function FreeTextureCache()
 End Function
 
 Function LoadRMesh(file$,rt.RoomTemplates)
+	file = DetermineModdedPath(file)
+
 	CatchErrors("Uncaught (LoadRMesh)")
 	;generate a texture made of white
 	Local blankTexture%
 	blankTexture=CreateTexture(4,4,1,1)
 	ClsColor 255,255,255
 	SetBuffer TextureBuffer(blankTexture)
-	Cls
-	SetBuffer BackBuffer()
-	
-	Local pinkTexture%
-	pinkTexture=CreateTexture(4,4,1,1)
-	ClsColor 255,255,255
-	SetBuffer TextureBuffer(pinkTexture)
 	Cls
 	SetBuffer BackBuffer()
 	
@@ -8082,7 +8077,7 @@ Function CreateChunkParts(r.Rooms)
 	
 	For i = 0 To ChunkAmount%
 		Local loc% = GetINISectionLocation(File$,"chunk"+i)
-		If loc > 0 Then
+		If loc <> -1 Then
 			StrTemp$ = GetINIString2(File,loc%,"count")
 			chp = New ChunkPart
 			chp\Amount% = Int(StrTemp$)

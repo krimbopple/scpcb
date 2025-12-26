@@ -5942,11 +5942,25 @@ Function DrawGUI()
 						ElseIf Left(strtemp, 8) = "a cup of"
 							strtemp = Right(strtemp, Len(strtemp)-9)
 						EndIf
-						
+
 						Local iniStr$ = "DATA\SCP-294.ini"
-						
-						Local loc% = GetINISectionLocation(iniStr, strtemp)
-						
+						Local loc% = -1
+						For m.Mods = Each Mods
+							Local modIniStr$ = m\Path + iniStr
+							If FileType(modIniStr) = 1 Then
+								Local sectionLocation = GetINISectionLocation(modIniStr, strtemp)
+								If sectionLocation <> -1 Then
+									iniStr = modIniStr
+									loc = sectionLocation
+									Exit
+								EndIf
+							EndIf
+						Next
+
+						If loc = -1 Then
+							loc% = GetINISectionLocation(iniStr, strtemp)
+						EndIf
+
 						;Stop
 						
 						strtemp = GetINIString2(iniStr, loc, "sound")
@@ -10084,24 +10098,40 @@ Function Use294()
 					Input294 = Right(Input294, Len(Input294)-9)
 				EndIf
 				
+				Local iniStr$ = "DATA\SCP-294.ini"
+				Local loc% = -1
 				If Input294<>""
-					Local loc% = GetINISectionLocation("DATA\SCP-294.ini",Input294)
+					For m.Mods = Each Mods
+						Local modIniStr$ = m\Path + iniStr
+						If FileType(modIniStr) = 1 Then
+							Local sectionLocation = GetINISectionLocation(modIniStr, Input294)
+							If sectionLocation <> -1 Then
+								iniStr = modIniStr
+								loc = sectionLocation
+								Exit
+							EndIf
+						EndIf
+					Next
+
+					If loc = -1 Then
+						loc = GetINISectionLocation(iniStr, Input294)
+					EndIf
 				EndIf
 				
-				If loc > 0 Then
-					strtemp$ = GetINIString2("DATA\SCP-294.ini", loc, "dispensesound")
+				If loc <> -1 Then
+					strtemp$ = GetINIString2(iniStr, loc, "dispensesound")
 					If strtemp="" Then
 						PlayerRoom\SoundCHN = PlaySound_Strict (LoadTempSound("SFX\SCP\294\dispense1.ogg"))
 					Else
 						PlayerRoom\SoundCHN = PlaySound_Strict (LoadTempSound(strtemp))
 					EndIf
 					
-					If GetINIInt2("DATA\SCP-294.ini", loc, "explosion")=True Then 
+					If GetINIInt2(iniStr, loc, "explosion")=True Then 
 						ExplosionTimer = 135
-						DeathMSG = GetINIString2("DATA\SCP-294.ini", loc, "deathmessage")
+						DeathMSG = GetINIString2(iniStr, loc, "deathmessage")
 					EndIf
 					
-					strtemp$ = GetINIString2("DATA\SCP-294.ini", loc, "color")
+					strtemp$ = GetINIString2(iniStr, loc, "color")
 					
 					sep1 = Instr(strtemp, ",", 1)
 					sep2 = Instr(strtemp, ",", sep1+1)
@@ -10109,8 +10139,8 @@ Function Use294()
 					g% = Trim(Mid(strtemp, sep1+1, sep2-sep1-1))
 					b% = Trim(Right(strtemp, Len(strtemp)-sep2))
 					
-					alpha# = Float(GetINIString2("DATA\SCP-294.ini", loc, "alpha",1.0))
-					glow = GetINIInt2("DATA\SCP-294.ini", loc, "glow")
+					alpha# = Float(GetINIString2(iniStr, loc, "alpha",1.0))
+					glow = GetINIInt2(iniStr, loc, "glow")
 					;If alpha = 0 Then alpha = 1.0
 					If glow Then alpha = -alpha
 					
@@ -10943,6 +10973,7 @@ Function GetINISectionLocation%(file$, section$)
 	Wend
 	
 	CloseFile f
+	Return -1
 End Function
 
 

@@ -16,6 +16,38 @@ Global ModCount%
 
 Const STEAM_ITEM_ID_FILENAME$ = "steam_itemid.txt"
 
+Function InstantiateMod.Mods(id$, path$)
+    m.Mods = new Mods
+    m\Id = id
+    m\Path = path
+    Local modIni$ = m\Path + "info.ini"
+    If FileType(modIni) <> 1 Then RuntimeError("Mod at " + Chr(34) + m\Path + Chr(34) + " is missing an info.ini file.")
+    Local ini% = OpenFile(modIni)
+    While Not Eof(ini)
+        Local l$ = Trim(ReadLine(ini))
+        If l <> "" And Instr(l, "#") <> 1 Then
+            Local splitterPos = Instr(l, "=")
+            Local key$ = Trim(Left(l, splitterPos - 1))
+            Local value$ = Trim(Right(l, Len(l) - splitterPos))
+            Select Key
+                Case "name"
+                    m\Name = value
+                Case "desc"
+                    m\Description = value
+            End Select
+        EndIf
+    Wend
+
+    If m\Name = "" Then RuntimeError("Mod at " + Chr(34) + m\Path + Chr(34) + " is missing a name in its info.ini file.")
+    For m2.Mods = Each Mods
+        ; ID collisions should be impossible.
+        If m2 <> m And m2\Id = m\Id Then RuntimeError("Mod at " + Chr(34) + m\Path + Chr(34) + " and mod at " + Chr(34) + m\Path + Chr(34) + " share a mod ID.")
+    Next
+
+    ModCount = ModCount + 1
+    Return m
+End Function
+
 Function ReloadMods()
     For m.Mods = Each Mods
         If Icon <> 0 Then FreeImage(Icon)
@@ -27,45 +59,29 @@ Function ReloadMods()
         f$=NextFile(d)
         If f$="" Then Exit
         If f$<>"." And f$<>".." And FileType("Mods\"+f) = 2 Then
-            m.Mods = new Mods
-            m\Path = "Mods\"+f+"\"
-            Local modIni$ = m\Path + "info.ini"
-            If FileType(modIni) <> 1 Then RuntimeError("Mod at " + Chr(34) + m\Path + Chr(34) + " is missing an info.ini file.")
-            Local ini% = OpenFile(modIni)
-            While Not Eof(ini)
-                Local l$ = Trim(ReadLine(ini))
-                If l <> "" And Instr(l, "#") <> 1 Then
-                    Local splitterPos = Instr(l, "=")
-                    Local key$ = Trim(Left(l, splitterPos - 1))
-                    Local value$ = Trim(Right(l, Len(l) - splitterPos))
-                    Select Key
-                        Case "id"
-                            m\Id = value
-                        Case "name"
-                            m\Name = value
-                        Case "desc"
-                            m\Description = value
-                    End Select
-                EndIf
-            Wend
+            m.Mods = InstantiateMod("local " + f, "Mods\"+f+"\")
 
-            If m\Id = "" Then RuntimeError("Mod at " + Chr(34) + m\Path + Chr(34) + " is missing an ID in its info.ini file.")
-            If m\Name = "" Then RuntimeError("Mod at " + Chr(34) + m\Path + Chr(34) + " is missing a name in its info.ini file.")
-            For m2.Mods = Each Mods
-                If m2 <> m And m2\Id = m\Id Then RuntimeError("Mod at " + Chr(34) + m\Path + Chr(34) + " and mod at " + Chr(34) + m\Path + Chr(34) + " share a mod ID.")
-            Next
-
+            ; These files will find their way onto the workshop on the first update, so we only set the owner for local mods.
             If FileType(m\Path + STEAM_ITEM_ID_FILENAME) = 1 Then
                 Local idFile% = OpenFile(m\Path + STEAM_ITEM_ID_FILENAME)
                 m\SteamWorkshopId = ReadLine(idFile)
                 m\IsUserOwner = True
                 CloseFile(idFile)
             EndIf
-
-            ModCount = ModCount + 1
         EndIf
     Forever
     CloseDir(d)
+
+    Steam_LoadSubscribedItems()
+    Local itemCount% = Steam_GetSubscribedItemCount()
+    For i = 0 To itemCount-1
+        Local id$ = Steam_GetSubscribedItemID(i)
+        Local itemPath$ = Steam_GetSubscribedItemPath(i)
+        If id <> "" And itemPath <> ""
+            m.Mods = InstantiateMod(id, itemPath + "\")
+            m\SteamWorkshopId = id
+        EndIf
+    Next
 
     If FileType("mods.ini") = 1 Then
         Local mods% = OpenFile("mods.ini")

@@ -72,16 +72,18 @@ Function ReloadMods()
     Forever
     CloseDir(d)
 
-    Steam_LoadSubscribedItems()
-    Local itemCount% = Steam_GetSubscribedItemCount()
-    For i = 0 To itemCount-1
-        Local id$ = Steam_GetSubscribedItemID(i)
-        Local itemPath$ = Steam_GetSubscribedItemPath(i)
-        If id <> "" And itemPath <> ""
-            m.Mods = InstantiateMod(id, itemPath + "\")
-            m\SteamWorkshopId = id
-        EndIf
-    Next
+    If SteamActive
+        Steam_LoadSubscribedItems()
+        Local itemCount% = Steam_GetSubscribedItemCount()
+        For i = 0 To itemCount-1
+            Local id$ = Steam_GetSubscribedItemID(i)
+            Local itemPath$ = Steam_GetSubscribedItemPath(i)
+            If id <> "" And itemPath <> ""
+                m.Mods = InstantiateMod(id, itemPath + "\")
+                m\SteamWorkshopId = id
+            EndIf
+        Next
+    EndIf
 
     If FileType("mods.ini") = 1 Then
         Local mods% = OpenFile("mods.ini")

@@ -30,8 +30,10 @@ While FileType(ErrorFile+Str(ErrorFileInd)+".txt")<>0
 Wend
 ErrorFile = ErrorFile+Str(ErrorFileInd)+".txt"
 
-Global SteamActive = Steam_Init() = 0
-If SteamActive <> 1 Then RuntimeError("Steam failed to initialize")
+Global SteamActive% = GetINIInt(OptionFile, "options", "enable steam")
+If SteamActive Then
+	If Steam_Init() <> 0 Then RuntimeError("Steam failed to initialize")
+EndIf
 
 Include "ModManager.bb"
 ReloadMods()
@@ -3311,7 +3313,7 @@ Repeat
 	EndIf
 Forever
 
-Steam_Shutdown()
+If SteamActive Then Steam_Shutdown()
 
 ;----------------------------------------------------------------------------------------------------------------------------------------------------
 ;----------------------------------------------------------------------------------------------------------------------------------------------------

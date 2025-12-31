@@ -139,7 +139,7 @@ Function UpdateMainMenu()
 		For i% = 0 To 4
 			temp = False
 			x = 159 * MenuScale
-			y = (286 + 100 * i) * MenuScale
+			y = (286 + 80 * i) * MenuScale
 			
 			width = 400 * MenuScale
 			height = 70 * MenuScale

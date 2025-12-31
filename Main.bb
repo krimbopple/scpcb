@@ -11187,7 +11187,7 @@ End Function
 Function ApplyBorderlessResizing()
 	If BorderlessWindowed And (RealGraphicWidth<>GraphicWidth) Or (RealGraphicHeight<>GraphicHeight) Then
 		CopyRectStretch(0, 0, GraphicWidth, GraphicHeight, 0, 0, RealGraphicWidth, RealGraphicHeight, BackBuffer(), TextureBuffer(ResizeTexture))
-		CopyRectStretch(0, 0, RealGraphicWidth, RealGraphicHeight, 0, 0, RealGraphicWidth, RealGraphicHeight, TextureBuffer(ResizeTexture), BackBuffer())
+		CopyRect(0, 0, RealGraphicWidth, RealGraphicHeight, 0, 0, TextureBuffer(ResizeTexture), BackBuffer())
 	EndIf
 End Function
 

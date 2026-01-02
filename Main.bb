@@ -43,7 +43,7 @@ Global Font1%, Font2%, Font3%, Font4%, Font5%
 Global ConsoleFont%
 
 Global VersionNumber$ = "1.3.12-pre1"
-Global CompatibleNumber$ = "1.3.11" ;Only change this if the version given isn't working with the current build version - ENDSHN
+Global CompatibleNumber$ = "1.3.12" ;Only change this if the version given isn't working with the current build version - ENDSHN
 
 Global MenuWhite%, MenuBlack%
 Global ButtonSFX% = LoadSound_Strict("SFX\Interact\Button.ogg")
@@ -54,6 +54,8 @@ Global EnableSFXRelease_Prev% = EnableSFXRelease%
 Global CanOpenConsole% = GetINIInt(OptionFile, "console", "enabled")
 
 Global DebugResourcePacks% = GetINIInt(OptionFile, "options", "resource pack debug")
+
+Global UseNumericSeeds% = GetINIInt(OptionFile, "options", "numeric seeds")
 
 Dim ArrowIMG(4)
 
@@ -7181,7 +7183,11 @@ Function DrawMenu()
 			SetFont Font1
 			Text x, y, "Difficulty: "+SelectedDifficulty\name
 			Text x, y+20*MenuScale, "Save: "+CurrSave
-			Text x, y+40*MenuScale, "Map seed: "+RandomSeed
+			If HasNumericSeed Then
+				Text x, y+40*MenuScale, "Map seed (numeric): "+Str(RandomSeedNumeric)
+			Else
+				Text x, y+40*MenuScale, "Map seed: "+RandomSeed
+			EndIf
 		ElseIf AchievementsMenu <= 0 And OptionsMenu > 0 And QuitMSG <= 0 And KillTimer >= 0
 			If DrawButton(x + 101 * MenuScale, y + 390 * MenuScale, 230 * MenuScale, 60 * MenuScale, "Back") Then
 				AchievementsMenu = 0
@@ -7509,6 +7515,15 @@ Function DrawMenu()
 						DrawOptionsTooltip(tx,ty,tw,th,"resourcepackdebug")
 					EndIf
 					
+					y = y + 30*MenuScale
+
+					Color 255,255,255
+					Text(x, y, "Use numeric seeds:")
+					UseNumericSeeds = DrawTick(x + 270 * MenuScale, y + MenuScale, UseNumericSeeds)
+					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale)
+						DrawOptionsTooltip(tx,ty,tw,th,"numericseeds")
+					EndIf
+
 					y = y + 50*MenuScale
 					
 					Color 255,255,255
@@ -11151,6 +11166,7 @@ Function SaveOptionsINI()
 	PutINIValue(OptionFile, "console", "enabled", CanOpenConsole%)
 	PutINIValue(OptionFile, "console", "auto opening", ConsoleOpening%)
 	PutINIValue(OptionFile, "options", "resource pack debug", DebugResourcePacks%)
+	PutINIValue(OptionFile, "options", "numeric seeds", UseNumericSeeds%)
 	PutINIValue(OptionFile, "options", "particle amount", ParticleAmount)
 	PutINIValue(OptionFile, "options", "enable vram", EnableVRam)
 	PutINIValue(OptionFile, "options", "mouse smoothing", MouseSmooth)

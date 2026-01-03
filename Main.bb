@@ -2672,7 +2672,6 @@ DrawLoading(90, True)
 Global ResizeTexture%
 
 Function InitFastResize()
-	If ResizeTexture <> 0 Then FreeTexture(ResizeTexture) : ResizeTexture = 0
 	ResizeTexture = CreateTexture(SMALLEST_POWER_TWO, SMALLEST_POWER_TWO, 1 + 2 + 256 + 1024)
 End Function
 

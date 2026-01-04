@@ -2783,7 +2783,7 @@ Repeat
 	FPSfactor = Min(ElapsedTime * 70, 5.0)
 	FPSfactor2 = FPSfactor
 	
-	If MenuOpen Or InvOpen Or OtherOpen<>Null Or ConsoleOpen Or SelectedDoor <> Null Or SelectedScreen <> Null Or Using294 Then FPSfactor = 0
+	If IsPaused() Then FPSfactor = 0
 	
 	If Framelimit > 0 Then
 	    ;Framelimit
@@ -2851,7 +2851,7 @@ Repeat
 		
 		If FPSfactor > 0 And PlayerRoom\RoomTemplate\Name <> "dimension1499" Then UpdateSecurityCams()
 		
-		If PlayerRoom\RoomTemplate\Name <> "pocketdimension" And PlayerRoom\RoomTemplate\Name <> "gatea" And PlayerRoom\RoomTemplate\Name <> "exit1" And (Not MenuOpen) And (Not ConsoleOpen) And (Not InvOpen) Then 
+		If PlayerRoom\RoomTemplate\Name <> "pocketdimension" And PlayerRoom\RoomTemplate\Name <> "gatea" And PlayerRoom\RoomTemplate\Name <> "exit1" And (Not IsAnyMenuOpen()) Then 
 			
 			If Rand(1500) = 1 Then
 				For i = 0 To 5
@@ -2908,7 +2908,7 @@ Repeat
 		UpdateCheckpoint1 = False
 		UpdateCheckpoint2 = False
 		
-		If (Not MenuOpen) And (Not InvOpen) And (OtherOpen=Null) And (SelectedDoor = Null) And (ConsoleOpen = False) And (Using294 = False) And (SelectedScreen = Null) And EndingTimer=>0 Then
+		If (Not IsPaused()) And EndingTimer=>0 Then
 			LightVolume = CurveValue(TempLightVolume, LightVolume, 50.0)
 			CameraFogRange(Camera, CameraFogNear*LightVolume,CameraFogFar*LightVolume)
 			CameraFogColor(Camera, 0,0,0)
@@ -3109,25 +3109,19 @@ Repeat
 		
 		;[End block]
 		
-		If KeyHit(KEY_INV) And VomitTimer >= 0 Then
-			If (Not UnableToMove) And (Not IsZombie) And (Not Using294) Then
-				Local W$ = ""
-				Local V# = 0
-				If SelectedItem<>Null
-					W$ = SelectedItem\itemtemplate\tempname
-					V# = SelectedItem\state
-				EndIf
-				If (W<>"vest" And W<>"finevest" And W<>"hazmatsuit" And W<>"hazmatsuit2" And W<>"hazmatsuit3") Or V=0 Or V=100
-					If InvOpen Then
-						ResumeSounds()
-						MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
-					Else
-						PauseSounds()
-					EndIf
-					InvOpen = Not InvOpen
-					If OtherOpen<>Null Then OtherOpen=Null
-					SelectedItem = Null
-				EndIf
+		If KeyHit(KEY_INV) And VomitTimer >= 0 And (Not UnableToMove) And (Not IsZombie) And (Not Using294) And KillTimer >= 0 And (Not MenuOpen) Then
+			Local W$ = ""
+			Local V# = 0
+			If SelectedItem<>Null
+				W$ = SelectedItem\itemtemplate\tempname
+				V# = SelectedItem\state
+			EndIf
+			If (W<>"vest" And W<>"finevest" And W<>"hazmatsuit" And W<>"hazmatsuit2" And W<>"hazmatsuit3") Or V=0 Or V=100
+				InvOpen = Not InvOpen
+				If OtherOpen<>Null Then OtherOpen=Null
+				SelectedItem = Null
+				SelectedScreen = Null
+				UpdateMenuState()
 			EndIf
 		EndIf
 		
@@ -3194,14 +3188,8 @@ Repeat
 		
 		If KeyHit(KEY_CONSOLE) Then
 			If CanOpenConsole
-				If ConsoleOpen Then
-					ResumeSounds()
-					MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
-				Else
-					PauseSounds()
-				EndIf
 				ConsoleOpen = (Not ConsoleOpen)
-				FlushKeys()
+				UpdateMenuState()
 			EndIf
 		EndIf
 		
@@ -3838,6 +3826,24 @@ Function DrawEnding()
 	If Fullscreen Then DrawImage CursorIMG, ScaledMouseX(),ScaledMouseY()
 	
 	SetFont Font1
+End Function
+
+Function UpdateMenuState()
+	If IsAnyMenuOpen() Then
+		PauseSounds()
+	Else
+		ResumeSounds()
+		MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
+	EndIf
+	FlushKeys()
+End Function
+
+Function IsAnyMenuOpen()
+	Return MenuOpen Lor ConsoleOpen Lor InvOpen Lor OtherOpen<>Null Lor (SelectedItem <> Null And SelectedItem\invSlots>0) Lor Using294
+End Function
+
+Function IsPaused()
+	Return IsAnyMenuOpen() Lor SelectedDoor <> Null Lor SelectedScreen <> Null
 End Function
 
 Type CreditsLine
@@ -4595,7 +4601,7 @@ Function DrawGUI()
 	
 	Local e.Events, it.Items
 	
-	If MenuOpen Or ConsoleOpen Or SelectedDoor <> Null Or InvOpen Or OtherOpen<>Null Or EndingTimer < 0 Then
+	If IsAnyMenuOpen() Lor SelectedDoor <> Null Lor EndingTimer < 0 Then
 		ShowPointer()
 	Else
 		HidePointer()
@@ -4656,7 +4662,7 @@ Function DrawGUI()
 	EndIf
 	
 	
-	If ClosestButton <> 0 And SelectedDoor = Null And InvOpen = False And MenuOpen = False And OtherOpen = Null Then
+	If ClosestButton <> 0 And (Not IsPaused()) Then
 		temp% = CreatePivot()
 		PositionEntity temp, EntityX(Camera), EntityY(Camera), EntityZ(Camera)
 		PointEntity temp, ClosestButton
@@ -4964,14 +4970,9 @@ Function DrawGUI()
 	EndIf
 	
 	If KeyHit(1) And EndingTimer=0 And (Not Using294) Then
-		If MenuOpen Or InvOpen Then
-			ResumeSounds()
-			If OptionsMenu <> 0 Then SaveOptionsINI()
-			MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
-		Else
-			PauseSounds()
-		EndIf
+		If (MenuOpen Or InvOpen) And OptionsMenu <> 0 Then SaveOptionsINI()
 		MenuOpen = (Not MenuOpen)
+		UpdateMenuState()
 		
 		AchievementsMenu = 0
 		OptionsMenu = 0
@@ -5050,7 +5051,6 @@ Function DrawGUI()
 			If OtherOpen\SecondInv[n] <> Null Then
 				If (SelectedItem <> OtherOpen\SecondInv[n] Or isMouseOn) Then DrawImage(OtherOpen\SecondInv[n]\invimg, x + width / 2 - 32, y + height / 2 - 32)
 			EndIf
-			DebugLog "otheropen: "+(OtherOpen<>Null)
 			If OtherOpen\SecondInv[n] <> Null And SelectedItem <> OtherOpen\SecondInv[n] Then
 			;drawimage(OtherOpen\SecondInv[n].InvIMG, x + width / 2 - 32, y + height / 2 - 32)
 				If isMouseOn Then
@@ -5208,9 +5208,8 @@ Function DrawGUI()
 		
 		If Fullscreen Then DrawImage CursorIMG,ScaledMouseX(),ScaledMouseY()
 		If (closedInv) And (Not InvOpen) Then 
-			ResumeSounds() 
 			OtherOpen=Null
-			MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
+			UpdateMenuState()
 		EndIf
 		;[End Block]
 		
@@ -5565,8 +5564,7 @@ Function DrawGUI()
 		If Fullscreen Then DrawImage CursorIMG, ScaledMouseX(),ScaledMouseY()
 		
 		If InvOpen = False Then 
-			ResumeSounds() 
-			MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
+			UpdateMenuState()
 		EndIf
 	Else ;invopen = False
 		
@@ -7124,7 +7122,7 @@ Function DrawMenu()
 	If api_GetFocus() = 0 Lor steamOverlayActive Then ;Game is out of focus -> pause the game
 		If (Not Using294) Then
 			MenuOpen = True
-			PauseSounds()
+			UpdateMenuState()
 		EndIf
 		;Reduce the CPU take while game is not in focus, unless Steam overlay is active
 		If Not steamOverlayActive Then Delay 1000
@@ -7154,6 +7152,8 @@ Function DrawMenu()
 		EndIf
 		
 		InvOpen = False
+		OtherOpen = Null
+		SelectedScreen = Null
 		
 		width = ImageWidth(PauseMenuIMG)
 		height = ImageHeight(PauseMenuIMG)
@@ -7686,8 +7686,7 @@ Function DrawMenu()
 				
 				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Resume", True, True) Then
 					MenuOpen = False
-					ResumeSounds()
-					MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
+					UpdateMenuState()
 				EndIf
 				
 				y = y + 75*MenuScale
@@ -10067,8 +10066,6 @@ End Function
 
 Function Use294()
 	Local x#,y#, xtemp%,ytemp%, strtemp$, temp%
-	
-	ShowPointer()
 	
 	x = GraphicWidth/2 - (ImageWidth(Panel294)/2)
 	y = GraphicHeight/2 - (ImageHeight(Panel294)/2)

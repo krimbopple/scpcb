@@ -6219,6 +6219,7 @@ Function UpdateScreens()
 					DrawHandIcon=True
 					If MouseUp1 Then 
 						SelectedScreen=s
+						SelectedItem = Null
 						s\img = LoadImage_Strict("GFX\screens\"+s\imgpath)
 						s\img = ResizeImage2(s\img, ImageWidth(s\img) * MenuScale, ImageHeight(s\img) * MenuScale)
 						MaskImage s\img, 255,0,255

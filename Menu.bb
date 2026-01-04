@@ -63,6 +63,8 @@ Global ModChangelog$
 Global ShouldKeepModDescription% = True
 Global ModsDirty% = False
 Global SelectedMod.Mods
+Global NewModBlink% = LoadImage_Strict("GFX\newmod.png")
+ResizeImage(NewModBlink, 24 * MenuScale, 24 * MenuScale)
 
 Function EllipsisLeft$(txt$, maxLen%)
 	If Len(txt) > maxLen Then Return Left(txt, maxLen-3) + "…"
@@ -1211,6 +1213,7 @@ Function UpdateMainMenu()
 
 					Local xStart = x
 
+					Local milis% = MilliSecs()
 					i% = ModCount
 					If (i Mod 6) <> 0 Then i = i - (i Mod 6) + 6
 					Local drawn% = 0
@@ -1223,6 +1226,7 @@ Function UpdateMainMenu()
 								Local mActive = DrawTick(x, y + 25 * MenuScale, m\IsActive)
 								If mActive <> m\IsActive Then
 									m\IsActive = mActive
+									m\IsNew = False
 									If m\RequiresReload Then ModsDirty = True
 								EndIf
 
@@ -1241,6 +1245,8 @@ Function UpdateMainMenu()
 									If m\IsActive Then ico = m\Icon Else ico = m\DisabledIcon
 									DrawImage(ico, x + 3 * MenuScale, y + 3 * MenuScale)
 								EndIf
+
+								If m\IsNew And milis Mod 1200 >= 600 Then DrawImage(NewModBlink, x + 2 * MenuScale, y + 2 * MenuScale)
 
 								If m\IsActive Then
 									Color 255, 255, 255
@@ -1266,7 +1272,7 @@ Function UpdateMainMenu()
 
 								If UpdatingMod = m Then
 									Local strr$ = ""
-									Local slice% = (MilliSecs() Mod 1200) / 200
+									Local slice% = (milis Mod 1200) / 200
 									Select slice
 										Case 0
 											strr = "   "

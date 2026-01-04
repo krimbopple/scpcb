@@ -10,7 +10,7 @@ Type Mods
     Field Author$
     Field IconPath$, Icon%, DisabledIcon%
     Field RequiresReload%
-    Field IsActive%
+    Field IsNew%, IsActive%
     Field SteamWorkshopId$
     Field IsUserOwner%
 End Type
@@ -21,6 +21,7 @@ Const STEAM_ITEM_ID_FILENAME$ = "steam_itemid.txt"
 
 Function InstantiateMod.Mods(id$, path$)
     m.Mods = new Mods
+    m\IsNew = True
     m\Id = id
     m\Path = path
     Local modIni$ = m\Path + "info.ini"
@@ -109,6 +110,7 @@ Function ReloadMods()
                         Insert m After firstSorted
                         firstSorted = m
                         m\IsActive = ParseINIInt(value)
+                        m\IsNew = False
                         Exit
                     EndIf
                 Next

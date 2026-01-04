@@ -1430,7 +1430,6 @@ Function UpdateLauncher()
 		lock% = False
 
 		If BorderlessWindowed Or (Not Fullscreen) Then lock% = True
-		Bit16Mode = DrawTick(40 + 430 - 15, 260 - 55 + 65 + 8, Bit16Mode,lock%)
 		LauncherEnabled = DrawTick(40 + 430 - 15, 260 - 55 + 95 + 8, LauncherEnabled)
 
 		If BorderlessWindowed
@@ -1444,26 +1443,12 @@ Function UpdateLauncher()
 		Color 255, 255, 255
 		Text(40 + 430 + 15, 262 - 55 + 35 - 8, "Borderless",False,False)
 		Text(40 + 430 + 15, 262 - 55 + 35 + 12, "windowed mode",False,False)
-
-		If BorderlessWindowed Or (Not Fullscreen)
- 		   Color 255, 0, 0
- 		   Bit16Mode = False
-		Else
-		    Color 255, 255, 255
-		EndIf
-
-		Text(40 + 430 + 15, 262 - 55 + 65 + 8, "16 Bit")
-		Color 255, 255, 255
 		Text(40 + 430 + 15, 262 - 55 + 95 + 8, "Use launcher")
 		
 		If (Not BorderlessWindowed)
-			If Fullscreen
-				Text(40+ 260 + 15, 262 - 55 + 140, "Current Resolution: "+(GfxModeWidths(SelectedGFXMode) + "x" + GfxModeHeights(SelectedGFXMode) + "," + (16+(16*(Not Bit16Mode)))))
-			Else
-				Text(40+ 260 + 15, 262 - 55 + 140, "Current Resolution: "+(GfxModeWidths(SelectedGFXMode) + "x" + GfxModeHeights(SelectedGFXMode) + ",32"))
-			EndIf
+			Text(40+ 260 + 15, 262 - 55 + 140, "Current Resolution: "+(GfxModeWidths(SelectedGFXMode) + "x" + GfxModeHeights(SelectedGFXMode)))
 		Else
-			Text(40+ 260 + 15, 262 - 55 + 140, "Current Resolution: "+GfxModeWidths(SelectedGFXMode) + "x" + GfxModeHeights(SelectedGFXMode) + ",32")
+			Text(40+ 260 + 15, 262 - 55 + 140, "Current Resolution: "+GfxModeWidths(SelectedGFXMode) + "x" + GfxModeHeights(SelectedGFXMode))
 			If GfxModeWidths(SelectedGFXMode)<G_viewport_width Then
 				Text(40+ 260 + 65, 262 - 55 + 160, "(upscaled to")
 				Text(40+ 260 + 65, 262 - 55 + 180, G_viewport_width + "x" + G_viewport_height + ",32)")
@@ -1511,11 +1496,6 @@ Function UpdateLauncher()
 		PutINIValue(OptionFile, "options", "borderless windowed", "true")
 	Else
 		PutINIValue(OptionFile, "options", "borderless windowed", "false")
-	EndIf
-	If Bit16Mode Then
-		PutINIValue(OptionFile, "options", "16bit", "true")
-	Else
-		PutINIValue(OptionFile, "options", "16bit", "false")
 	EndIf
 	PutINIValue(OptionFile, "options", "gfx driver", SelectedGFXDriver)
 	

@@ -103,8 +103,6 @@ End Select
 Global ConsoleOpening% = GetINIInt(OptionFile, "console", "auto opening")
 Global SFXVolume# = GetINIFloat(OptionFile, "audio", "sound volume")
 
-Global Bit16Mode = GetINIInt(OptionFile, "options", "16bit")
-
 If LauncherEnabled Then 
 	AspectRatioRatio = 1.0
 	UpdateLauncher()
@@ -143,7 +141,7 @@ Else
 	RealGraphicWidth = GraphicWidth
 	RealGraphicHeight = GraphicHeight
 	If Fullscreen Then
-		Graphics3DExt(GraphicWidth, GraphicHeight, (16*Bit16Mode), 1)
+		Graphics3DExt(GraphicWidth, GraphicHeight, 0, 1)
 	Else
 		Graphics3DExt(GraphicWidth, GraphicHeight, 0, 2)
 	End If

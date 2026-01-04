@@ -4108,7 +4108,7 @@ Function MovePlayer()
 	EndIf
 	
 	If (Not NoClip) Then 
-		If ((KeyDown(KEY_DOWN) Or KeyDown(KEY_UP)) Or (KeyDown(KEY_RIGHT) Or KeyDown(KEY_LEFT)) And Playable) Or ForceMove>0 Then
+		If ((KeyDown(KEY_DOWN) Xor KeyDown(KEY_UP)) Or (KeyDown(KEY_RIGHT) Xor KeyDown(KEY_LEFT)) And Playable) Or ForceMove>0 Then
 			
 			If Crouch = 0 And (KeyDown(KEY_SPRINT)) And Stamina > 0.0 And (Not IsZombie) Then
 				Sprint = 2.5
@@ -4199,22 +4199,20 @@ Function MovePlayer()
 		
 		temp = False
 		If (Not IsZombie%)
-			If KeyDown(KEY_DOWN) And Playable Then
-				temp = True 
-				angle = 180
-				If KeyDown(KEY_LEFT) Then angle = 135 
-				If KeyDown(KEY_RIGHT) Then angle = -135 
-			ElseIf (KeyDown(KEY_UP) And Playable) Then; Or ForceMove>0
+			Local moveZ% = KeyDown(KEY_DOWN) - KeyDown(KEY_UP)
+			Local moveX% = KeyDown(KEY_LEFT) - KeyDown(KEY_RIGHT)
+			If moveZ > 0 And Playable Then
 				temp = True
-				angle = 0
-				If KeyDown(KEY_LEFT) Then angle = 45 
-				If KeyDown(KEY_RIGHT) Then angle = -45 
+				If moveX = 0 Then angle = 180 Else angle = 135 * moveX
+			ElseIf moveZ < 0 And Playable Then
+				temp = True
+				If moveX = 0 Then angle = 0 Else angle = 45 * moveX
 			ElseIf ForceMove>0 Then
 				temp=True
 				angle = ForceAngle
-			Else If Playable Then
-				If KeyDown(KEY_LEFT) Then angle = 90 : temp = True
-				If KeyDown(KEY_RIGHT) Then angle = -90 : temp = True 
+			Else If Playable And moveX <> 0 Then
+				temp = True
+				angle = 90 * moveX
 			EndIf
 		Else
 			temp=True

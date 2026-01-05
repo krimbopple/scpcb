@@ -7,13 +7,6 @@
 
 ;    See Credits.txt for a list of contributors
 
-Local InitErrorStr$ = ""
-If FileSize("zlibwapi.dll")=0 Then InitErrorStr=InitErrorStr+ "zlibwapi.dll"+Chr(13)+Chr(10)
-
-If Len(InitErrorStr)>0 Then
-	RuntimeError "The following DLLs were not found in the game directory:"+Chr(13)+Chr(10)+Chr(13)+Chr(10)+InitErrorStr
-EndIf
-
 Include "StrictLoads.bb"
 Include "KeyName.bb"
 
@@ -35,6 +28,11 @@ If SteamActive Then
 	If Steam_Init() <> 0 Then RuntimeError("Steam failed to initialize")
 EndIf
 
+Global IsRestart% = False
+.Start
+Global IsRunning% = True
+Global ShouldRestart% = False
+
 Include "ModManager.bb"
 ReloadMods()
 
@@ -42,7 +40,7 @@ Global UpdaterFont%
 Global Font1%, Font2%, Font3%, Font4%, Font5%
 Global ConsoleFont%
 
-Global VersionNumber$ = "1.3.12-pre2"
+Global VersionNumber$ = "1.3.12-pre3"
 Global CompatibleNumber$ = "1.3.12" ;Only change this if the version given isn't working with the current build version - ENDSHN
 
 Global MenuWhite%, MenuBlack%
@@ -77,7 +75,7 @@ Global ShowFPS = GetINIInt(OptionFile, "options", "show FPS")
 Global WireframeState
 Global HalloweenTex
 
-Global TotalGFXModes% = CountGfxModes3D(), GFXModes%
+Global TotalGFXModes% = CountGfxModes3D(), GFXModes% = 0
 Dim GfxModeWidths%(TotalGFXModes), GfxModeHeights%(TotalGFXModes)
 
 Global BorderlessWindowed% = GetINIInt(OptionFile, "options", "borderless windowed")
@@ -103,7 +101,7 @@ End Select
 Global ConsoleOpening% = GetINIInt(OptionFile, "console", "auto opening")
 Global SFXVolume# = GetINIFloat(OptionFile, "audio", "sound volume")
 
-If LauncherEnabled Then 
+If LauncherEnabled And (Not IsRestart) Then
 	AspectRatioRatio = 1.0
 	UpdateLauncher()
 Else
@@ -186,9 +184,9 @@ PlayStartupVideos()
 
 Global CursorIMG% = LoadImage_Strict("GFX\cursor.png")
 
-Global SelectedLoadingScreen.LoadingScreens, LoadingScreenAmount%, LoadingScreenText%
+Global SelectedLoadingScreen.LoadingScreens, LoadingScreenAmount% = 0, LoadingScreenText%
 Global LoadingBack% = LoadImage_Strict("Loadingscreens\loadingback.jpg")
-InitLoadingScreens("Loadingscreens\loadingscreens.ini")
+InitLoadingScreens()
 
 ;For some reason, Blitz3D doesn't load fonts that have filenames that
 ;don't match their "internal name" (i.e. their display name in applications
@@ -234,8 +232,6 @@ Global KEY_SAVE = GetINIInt(OptionFile, "binds", "Save key")
 Global KEY_CONSOLE = GetINIInt(OptionFile, "binds", "Console key")
 
 Global MouseSmooth# = GetINIFloat(OptionFile,"options", "mouse smoothing", 1.0)
-
-Const NAN# = (-1.0) ^ (0.5)
 
 Global Mesh_MinX#, Mesh_MinY#, Mesh_MinZ#
 Global Mesh_MaxX#, Mesh_MaxY#, Mesh_MaxZ#
@@ -535,6 +531,7 @@ Function UpdateConsole()
 		ConsoleInput = Left(ConsoleInput, 100)
 		
 		If KeyHit(28) And ConsoleInput <> "" Then
+			UsedConsole = True
 			ConsoleReissue = Null
 			ConsoleScroll = 0
 			CreateConsoleMsg(ConsoleInput,255,255,0,True)
@@ -607,6 +604,7 @@ Function UpdateConsole()
 							CreateConsoleMsg("- playmusic [clip + .wav/.ogg]")
 							CreateConsoleMsg("- notarget")
 							CreateConsoleMsg("- unlockexits")
+							CreateConsoleMsg("- omni")
 						Case "asd"
 							CreateConsoleMsg("HELP - asd")
 							CreateConsoleMsg("******************************")
@@ -716,6 +714,19 @@ Function UpdateConsole()
 							CreateConsoleMsg("******************************")
 							CreateConsoleMsg("Will play tracks in .ogg/.wav format")
 							CreateConsoleMsg("from "+Chr(34)+"SFX\Music\Custom\"+Chr(34)+".")
+							CreateConsoleMsg("******************************")
+						Case "omni"
+							CreateConsoleMsg("HELP - omni")
+							CreateConsoleMsg("******************************")
+							CreateConsoleMsg("Toggles getting guaranteed Key Card Omnis")
+							CreateConsoleMsg("from SCP-914, unless a valid parameter")
+							CreateConsoleMsg("is specified (on/off).")
+							CreateConsoleMsg("A Key Card Omni can be obtained from SCP-914")
+							CreateConsoleMsg("by refining a Level 5 Key Card on Fine")
+							CreateConsoleMsg("or any Key Card on Very Fine.")
+							CreateConsoleMsg("By default, the chance of success is random")
+							CreateConsoleMsg("and relies on the amount of achievements")
+							CreateConsoleMsg("unlocked in the current save.")
 							CreateConsoleMsg("******************************")
 							
 						Default
@@ -1408,6 +1419,23 @@ Function UpdateConsole()
 					BlinkEffectTimer = Float(Right(args, Len(args) - Instr(args, " ")))
 					CreateConsoleMsg("Set BlinkEffect to: " + BlinkEffect + "and BlinkEffect timer: " + BlinkEffectTimer)
 					;[End Block]
+				Case "omni"
+					StrTemp$ = Lower(Right(ConsoleInput, Len(ConsoleInput) - Instr(ConsoleInput, " ")))
+					
+					Select StrTemp
+						Case "on", "1", "true"
+							GuaranteedOmni% = True						
+						Case "off", "0", "false"
+							GuaranteedOmni% = False	
+						Default
+							GuaranteedOmni% = Not GuaranteedOmni%
+					End Select
+					
+					If GuaranteedOmni% Then
+						CreateConsoleMsg("GUARANTEED KEY CARD OMNI ON")	
+					Else
+						CreateConsoleMsg("GUARANTEED KEY CARD OMNI OFF")
+					EndIf
 				Case "jorge"
 					;[Block]	
 					CreateConsoleMsg(Chr(74)+Chr(79)+Chr(82)+Chr(71)+Chr(69)+Chr(32)+Chr(72)+Chr(65)+Chr(83)+Chr(32)+Chr(66)+Chr(69)+Chr(69)+Chr(78)+Chr(32)+Chr(69)+Chr(88)+Chr(80)+Chr(69)+Chr(67)+Chr(84)+Chr(73)+Chr(78)+Chr(71)+Chr(32)+Chr(89)+Chr(79)+Chr(85)+Chr(46))
@@ -1555,7 +1583,7 @@ Global MusicVolume# = GetINIFloat(OptionFile, "audio", "music volume")
 ;Global MusicCHN% = StreamSound_Strict("SFX\Music\"+Music(2)+".ogg", MusicVolume, CurrMusicStream)
 
 Global CurrMusicStream, MusicCHN
-MusicCHN = StreamSound_Strict("SFX\Music\"+Music(2)+".ogg",MusicVolume,Mode)
+MusicCHN = StreamSound_Strict("SFX\Music\"+Music(2)+".ogg",MusicVolume)
 
 Global CurrMusicVolume# = 1.0, NowPlaying%=2, ShouldPlay%=11
 Global CurrMusic% = 1
@@ -1694,6 +1722,8 @@ Global PlayerDetected%
 Global PrevInjuries#,PrevBloodloss#
 Global NoTarget% = False
 
+Global GuaranteedOmni% = False
+
 Global NVGImages = LoadAnimImage("GFX\battery.png",64,64,0,2)
 
 Global Wearing1499% = False
@@ -1719,7 +1749,6 @@ Global QuitMSG% = 0
 
 Global InFacility% = True
 
-Global PrevMusicVolume# = MusicVolume#
 Global PrevSFXVolume# = SFXVolume#
 Global DeafPlayer% = False
 Global DeafTimer# = 0.0
@@ -2128,28 +2157,9 @@ Function UpdateDoors()
 							d\openstate = Max(0, d\openstate - FPSfactor*0.8)
 							MoveEntity(d\obj, Sin(d\openstate) * -FPSfactor / 180.0, 0, 0)
 							If d\obj2 <> 0 Then MoveEntity(d\obj2, Sin(d\openstate) * FPSfactor / 180.0, 0, 0)
-							If d\openstate < 15 And d\openstate+FPSfactor => 15
-								If ParticleAmount=2
-									For i = 0 To Rand(75,99)
-										Local pvt% = CreatePivot()
-										PositionEntity(pvt, EntityX(d\frameobj,True)+Rnd(-0.2,0.2), EntityY(d\frameobj,True)+Rnd(0.0,1.2), EntityZ(d\frameobj,True)+Rnd(-0.2,0.2))
-										RotateEntity(pvt, 0, Rnd(360), 0)
-										
-										Local p.Particles = CreateParticle(EntityX(pvt), EntityY(pvt), EntityZ(pvt), 2, 0.002, 0, 300)
-										p\speed = 0.005
-										RotateEntity(p\pvt, Rnd(-20, 20), Rnd(360), 0)
-										
-										p\SizeChange = -0.00001
-										p\size = 0.01
-										ScaleSprite p\obj,p\size,p\size
-										
-										p\Achange = -0.01
-										
-										EntityOrder p\obj,-1
-										
-										FreeEntity pvt
-									Next
-								EndIf
+							If ParticleAmount=2 And d\openstate < 15 And d\openstate+FPSfactor => 15
+								Local particles% = SetEmitter(d\frameobj, ParticleEffect[3])
+								EntityOrder(particles, -1)
 							EndIf
 						Case 2
 							d\openstate = Max(0, d\openstate - FPSfactor * 2 * (d\fastopen+1))
@@ -2754,7 +2764,7 @@ Global I_Zone.MapZones = New MapZones
 ;----------------------------------------------       		MAIN LOOP                 ---------------------------------------------------------------
 ;----------------------------------------------------------------------------------------------------------------------------------------------------
 
-Repeat
+While IsRunning
 
 	Cls
 	
@@ -2765,7 +2775,7 @@ Repeat
 	FPSfactor = Min(ElapsedTime * 70, 5.0)
 	FPSfactor2 = FPSfactor
 	
-	If MenuOpen Or InvOpen Or OtherOpen<>Null Or ConsoleOpen Or SelectedDoor <> Null Or SelectedScreen <> Null Or Using294 Then FPSfactor = 0
+	If IsPaused() Then FPSfactor = 0
 	
 	If Framelimit > 0 Then
 	    ;Framelimit
@@ -2833,7 +2843,7 @@ Repeat
 		
 		If FPSfactor > 0 And PlayerRoom\RoomTemplate\Name <> "dimension1499" Then UpdateSecurityCams()
 		
-		If PlayerRoom\RoomTemplate\Name <> "pocketdimension" And PlayerRoom\RoomTemplate\Name <> "gatea" And PlayerRoom\RoomTemplate\Name <> "exit1" And (Not MenuOpen) And (Not ConsoleOpen) And (Not InvOpen) Then 
+		If PlayerRoom\RoomTemplate\Name <> "pocketdimension" And PlayerRoom\RoomTemplate\Name <> "gatea" And PlayerRoom\RoomTemplate\Name <> "exit1" And (Not IsAnyMenuOpen()) Then 
 			
 			If Rand(1500) = 1 Then
 				For i = 0 To 5
@@ -2890,7 +2900,7 @@ Repeat
 		UpdateCheckpoint1 = False
 		UpdateCheckpoint2 = False
 		
-		If (Not MenuOpen) And (Not InvOpen) And (OtherOpen=Null) And (SelectedDoor = Null) And (ConsoleOpen = False) And (Using294 = False) And (SelectedScreen = Null) And EndingTimer=>0 Then
+		If (Not IsPaused()) And EndingTimer=>0 Then
 			LightVolume = CurveValue(TempLightVolume, LightVolume, 50.0)
 			CameraFogRange(Camera, CameraFogNear*LightVolume,CameraFogFar*LightVolume)
 			CameraFogColor(Camera, 0,0,0)
@@ -2941,12 +2951,11 @@ Repeat
 			UpdateParticles()
 			Use427()
 			UpdateMonitorSaving()
-			;Added a simple code for updating the Particles function depending on the FPSFactor (still WIP, might not be the final version of it) - ENDSHN
-			UpdateParticles_Time# = Min(1,UpdateParticles_Time#+FPSfactor)
-			If UpdateParticles_Time#=1
+			UpdateParticles_Time# = UpdateParticles_Time#+FPSfactor
+			If UpdateParticles_Time#=>1
 				UpdateDevilEmitters()
 				UpdateParticles_Devil()
-				UpdateParticles_Time#=0
+				UpdateParticles_Time# = UpdateParticles_Time# - 1
 			EndIf
 		EndIf
 		
@@ -3092,25 +3101,19 @@ Repeat
 		
 		;[End block]
 		
-		If KeyHit(KEY_INV) And VomitTimer >= 0 Then
-			If (Not UnableToMove) And (Not IsZombie) And (Not Using294) Then
-				Local W$ = ""
-				Local V# = 0
-				If SelectedItem<>Null
-					W$ = SelectedItem\itemtemplate\tempname
-					V# = SelectedItem\state
-				EndIf
-				If (W<>"vest" And W<>"finevest" And W<>"hazmatsuit" And W<>"hazmatsuit2" And W<>"hazmatsuit3") Or V=0 Or V=100
-					If InvOpen Then
-						ResumeSounds()
-						MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
-					Else
-						PauseSounds()
-					EndIf
-					InvOpen = Not InvOpen
-					If OtherOpen<>Null Then OtherOpen=Null
-					SelectedItem = Null
-				EndIf
+		If KeyHit(KEY_INV) And VomitTimer >= 0 And (Not UnableToMove) And (Not IsZombie) And (Not Using294) And KillTimer >= 0 And (Not MenuOpen) Then
+			Local W$ = ""
+			Local V# = 0
+			If SelectedItem<>Null
+				W$ = SelectedItem\itemtemplate\tempname
+				V# = SelectedItem\state
+			EndIf
+			If (W<>"vest" And W<>"finevest" And W<>"hazmatsuit" And W<>"hazmatsuit2" And W<>"hazmatsuit3") Or V=0 Or V=100
+				InvOpen = Not InvOpen
+				If OtherOpen<>Null Then OtherOpen=Null
+				SelectedItem = Null
+				SelectedScreen = Null
+				UpdateMenuState()
 			EndIf
 		EndIf
 		
@@ -3177,15 +3180,8 @@ Repeat
 		
 		If KeyHit(KEY_CONSOLE) Then
 			If CanOpenConsole
-				If ConsoleOpen Then
-					UsedConsole = True
-					ResumeSounds()
-					MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
-				Else
-					PauseSounds()
-				EndIf
 				ConsoleOpen = (Not ConsoleOpen)
-				FlushKeys()
+				UpdateMenuState()
 			EndIf
 		EndIf
 		
@@ -3268,9 +3264,23 @@ Repeat
 	Else 
 		Flip 1
 	EndIf
-Forever
+Wend
+
+If ShouldRestart Then
+	IsRestart = True
+	Goto Start
+EndIf
 
 If SteamActive Then Steam_Shutdown()
+
+Function Restart()
+	Cls
+	StopStream_Strict(MusicCHN)
+	MusicCHN = 0
+	ClearLoadedINIFiles()
+	IsRunning = False
+	ShouldRestart = True
+End Function
 
 ;----------------------------------------------------------------------------------------------------------------------------------------------------
 ;----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3755,7 +3765,7 @@ Function DrawEnding()
 							If TempSounds[i]<>0 Then FreeSound_Strict TempSounds[i] : TempSounds[i]=0
 						Next
 						StopStream_Strict(MusicCHN)
-						MusicCHN = StreamSound_Strict("SFX\Music\"+Music(NowPlaying)+".ogg",0.0,Mode)
+						MusicCHN = StreamSound_Strict("SFX\Music\"+Music(NowPlaying)+".ogg",0.0)
 						SetStreamVolume_Strict(MusicCHN,1.0*MusicVolume)
 						FlushKeys()
 						EndingTimer=-2000
@@ -3778,6 +3788,24 @@ Function DrawEnding()
 	If Fullscreen Then DrawImage CursorIMG, ScaledMouseX(),ScaledMouseY()
 	
 	SetFont Font1
+End Function
+
+Function UpdateMenuState()
+	If IsAnyMenuOpen() Then
+		PauseSounds()
+	Else
+		ResumeSounds()
+		MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
+	EndIf
+	FlushKeys()
+End Function
+
+Function IsAnyMenuOpen()
+	Return MenuOpen Lor ConsoleOpen Lor InvOpen Lor OtherOpen<>Null Lor (SelectedItem <> Null And SelectedItem\invSlots>0) Lor Using294
+End Function
+
+Function IsPaused()
+	Return IsAnyMenuOpen() Lor SelectedDoor <> Null Lor SelectedScreen <> Null
 End Function
 
 Type CreditsLine
@@ -3806,6 +3834,7 @@ Function InitCredits()
 		cl = New CreditsLine
 		cl\txt = l
 	Until Eof(file)
+	CloseFile(file)
 	
 	Delete First CreditsLine
 	CreditsTimer = 0
@@ -4041,7 +4070,7 @@ Function MovePlayer()
 	EndIf
 	
 	If (Not NoClip) Then 
-		If ((KeyDown(KEY_DOWN) Or KeyDown(KEY_UP)) Or (KeyDown(KEY_RIGHT) Or KeyDown(KEY_LEFT)) And Playable) Or ForceMove>0 Then
+		If ((KeyDown(KEY_DOWN) Xor KeyDown(KEY_UP)) Or (KeyDown(KEY_RIGHT) Xor KeyDown(KEY_LEFT)) And Playable) Or ForceMove>0 Then
 			
 			If Crouch = 0 And (KeyDown(KEY_SPRINT)) And Stamina > 0.0 And (Not IsZombie) Then
 				Sprint = 2.5
@@ -4132,22 +4161,20 @@ Function MovePlayer()
 		
 		temp = False
 		If (Not IsZombie%)
-			If KeyDown(KEY_DOWN) And Playable Then
-				temp = True 
-				angle = 180
-				If KeyDown(KEY_LEFT) Then angle = 135 
-				If KeyDown(KEY_RIGHT) Then angle = -135 
-			ElseIf (KeyDown(KEY_UP) And Playable) Then; Or ForceMove>0
+			Local moveZ% = KeyDown(KEY_DOWN) - KeyDown(KEY_UP)
+			Local moveX% = KeyDown(KEY_LEFT) - KeyDown(KEY_RIGHT)
+			If moveZ > 0 And Playable Then
 				temp = True
-				angle = 0
-				If KeyDown(KEY_LEFT) Then angle = 45 
-				If KeyDown(KEY_RIGHT) Then angle = -45 
+				If moveX = 0 Then angle = 180 Else angle = 135 * moveX
+			ElseIf moveZ < 0 And Playable Then
+				temp = True
+				If moveX = 0 Then angle = 0 Else angle = 45 * moveX
 			ElseIf ForceMove>0 Then
 				temp=True
 				angle = ForceAngle
-			Else If Playable Then
-				If KeyDown(KEY_LEFT) Then angle = 90 : temp = True
-				If KeyDown(KEY_RIGHT) Then angle = -90 : temp = True 
+			Else If Playable And moveX <> 0 Then
+				temp = True
+				angle = 90 * moveX
 			EndIf
 		Else
 			temp=True
@@ -4294,12 +4321,8 @@ Function MouseLook()
 		
 		HeadDropSpeed = 0
 		
-		;If 0 Then 
 		;fixing the black screen bug with some bubblegum code 
-		Local Zero# = 0.0
-		Local Nan1# = 0.0 / Zero
-		If Int(EntityX(Collider))=Int(Nan1) Then
-			
+		If IsNaN(EntityX(Collider)) Then
 			PositionEntity Collider, EntityX(Camera, True), EntityY(Camera, True) - 0.5, EntityZ(Camera, True), True
 			Msg = "EntityX(Collider) = NaN, RESETTING COORDINATES    -    New coordinates: "+EntityX(Collider)
 			MsgTimer = 300				
@@ -4320,20 +4343,13 @@ Function MouseLook()
 		;moveentity player, side, up, 0	
 		; -- Update the smoothing que To smooth the movement of the mouse.
 		mouse_x_speed_1# = CurveValue(MouseXSpeed() * (MouseSens + 0.6) , mouse_x_speed_1, (6.0 / (MouseSens + 1.0))*MouseSmooth) 
-		If Int(mouse_x_speed_1) = Int(Nan1) Then mouse_x_speed_1 = 0
-		If PrevFPSFactor>0 Then
-            If Abs(FPSfactor/PrevFPSFactor-1.0)>1.0 Then
-                ;lag spike detected - stop all camera movement
-                mouse_x_speed_1 = 0.0
-                mouse_y_speed_1 = 0.0
-            EndIf
-        EndIf
+		If IsNaN(mouse_x_speed_1) Then mouse_x_speed_1 = 0
 		If InvertMouse Then
 			mouse_y_speed_1# = CurveValue(-MouseYSpeed() * (MouseSens + 0.6), mouse_y_speed_1, (6.0/(MouseSens+1.0))*MouseSmooth) 
 		Else
 			mouse_y_speed_1# = CurveValue(MouseYSpeed () * (MouseSens + 0.6), mouse_y_speed_1, (6.0/(MouseSens+1.0))*MouseSmooth) 
 		EndIf
-		If Int(mouse_y_speed_1) = Int(Nan1) Then mouse_y_speed_1 = 0
+		If IsNaN(mouse_y_speed_1) Then mouse_y_speed_1 = 0
 		
 		Local the_yaw# = ((mouse_x_speed_1#)) * mouselook_x_inc# / (1.0+WearingVest)
 		Local the_pitch# = ((mouse_y_speed_1#)) * mouselook_y_inc# / (1.0+WearingVest)
@@ -4534,7 +4550,7 @@ Function DrawGUI()
 	
 	Local e.Events, it.Items
 	
-	If MenuOpen Or ConsoleOpen Or SelectedDoor <> Null Or InvOpen Or OtherOpen<>Null Or EndingTimer < 0 Then
+	If IsAnyMenuOpen() Lor SelectedDoor <> Null Lor EndingTimer < 0 Then
 		ShowPointer()
 	Else
 		HidePointer()
@@ -4595,7 +4611,7 @@ Function DrawGUI()
 	EndIf
 	
 	
-	If ClosestButton <> 0 And SelectedDoor = Null And InvOpen = False And MenuOpen = False And OtherOpen = Null Then
+	If ClosestButton <> 0 And (Not IsPaused()) Then
 		temp% = CreatePivot()
 		PositionEntity temp, EntityX(Camera), EntityY(Camera), EntityZ(Camera)
 		PointEntity temp, ClosestButton
@@ -4753,27 +4769,28 @@ Function DrawGUI()
 					offset = offset + 1
 				EndIf
 			Next
+			x = x + 500 * MenuScale
 			If PlayerRoom\RoomTemplate\Name$ = "dimension1499"
-				Text x + 350, 50, "Current Chunk X/Z: ("+(Int((EntityX(Collider)+20)/40))+", "+(Int((EntityZ(Collider)+20)/40))+")"
+				Text x, 50, "Current Chunk X/Z: ("+(Int((EntityX(Collider)+20)/40))+", "+(Int((EntityZ(Collider)+20)/40))+")"
 				Local CH_Amount% = 0
 				For ch.Chunk = Each Chunk
 					CH_Amount = CH_Amount + 1
 				Next
-				Text x + 350, 70, "Current Chunk Amount: "+CH_Amount
+				Text x, 70, "Current Chunk Amount: "+CH_Amount
 			Else
-				Text x + 350, 50, "Current Room Position: ("+PlayerRoom\x+", "+PlayerRoom\y+", "+PlayerRoom\z+")"
+				Text x, 50, "Current Room Position: ("+PlayerRoom\x+", "+PlayerRoom\y+", "+PlayerRoom\z+")"
 			EndIf
-			Text x + 350, 90, "Triangles rendered: "+CurrTrisAmount
-			Text x + 350, 110, "Active textures: "+ActiveTextures()
-			Text x + 350, 130, "SCP-427 state (secs): "+Int(I_427\Timer/70.0)
-			Text x + 350, 150, "SCP-008 infection: "+Infect
+			Text x, 90, "Triangles rendered: "+CurrTrisAmount
+			Text x, 110, "Active textures: "+ActiveTextures()
+			Text x, 130, "SCP-427 state (secs): "+Int(I_427\Timer/70.0)
+			Text x, 150, "SCP-008 infection: "+Infect
 			For i = 0 To 5
-				Text x + 350, 170+(20*i), "SCP-1025 State "+i+": "+SCP1025state[i]
+				Text x, 170+(20*i), "SCP-1025 State "+i+": "+SCP1025state[i]
 			Next
 			If SelectedMonitor <> Null Then
-				Text x + 350, 310, "Current monitor: "+SelectedMonitor\ScrObj
+				Text x, 310, "Current monitor: "+SelectedMonitor\ScrObj
 			Else
-				Text x + 350, 310, "Current monitor: NULL"
+				Text x, 310, "Current monitor: NULL"
 			EndIf
 			
 			SetFont Font1
@@ -4903,14 +4920,9 @@ Function DrawGUI()
 	EndIf
 	
 	If KeyHit(1) And EndingTimer=0 And (Not Using294) Then
-		If MenuOpen Or InvOpen Then
-			ResumeSounds()
-			If OptionsMenu <> 0 Then SaveOptionsINI()
-			MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
-		Else
-			PauseSounds()
-		EndIf
+		If (MenuOpen Or InvOpen) And OptionsMenu <> 0 Then SaveOptionsINI()
 		MenuOpen = (Not MenuOpen)
+		UpdateMenuState()
 		
 		AchievementsMenu = 0
 		OptionsMenu = 0
@@ -4989,7 +5001,6 @@ Function DrawGUI()
 			If OtherOpen\SecondInv[n] <> Null Then
 				If (SelectedItem <> OtherOpen\SecondInv[n] Or isMouseOn) Then DrawImage(OtherOpen\SecondInv[n]\invimg, x + width / 2 - 32, y + height / 2 - 32)
 			EndIf
-			DebugLog "otheropen: "+(OtherOpen<>Null)
 			If OtherOpen\SecondInv[n] <> Null And SelectedItem <> OtherOpen\SecondInv[n] Then
 			;drawimage(OtherOpen\SecondInv[n].InvIMG, x + width / 2 - 32, y + height / 2 - 32)
 				If isMouseOn Then
@@ -5147,9 +5158,8 @@ Function DrawGUI()
 		
 		If Fullscreen Then DrawImage CursorIMG,ScaledMouseX(),ScaledMouseY()
 		If (closedInv) And (Not InvOpen) Then 
-			ResumeSounds() 
 			OtherOpen=Null
-			MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
+			UpdateMenuState()
 		EndIf
 		;[End Block]
 		
@@ -5504,8 +5514,7 @@ Function DrawGUI()
 		If Fullscreen Then DrawImage CursorIMG, ScaledMouseX(),ScaledMouseY()
 		
 		If InvOpen = False Then 
-			ResumeSounds() 
-			MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
+			UpdateMenuState()
 		EndIf
 	Else ;invopen = False
 		
@@ -5904,6 +5913,7 @@ Function DrawGUI()
 
 						Local iniStr$ = "DATA\SCP-294.ini"
 						Local loc% = -1
+						Local hasOverride%
 						For m.ActiveMods = Each ActiveMods
 							Local modIniStr$ = m\Path + iniStr
 							If FileType(modIniStr) = 1 Then
@@ -5913,10 +5923,14 @@ Function DrawGUI()
 									loc = sectionLocation
 									Exit
 								EndIf
+								If FileType(modIniStr + ".OVERRIDE") Then
+									hasOverride = True
+									Exit
+								EndIf
 							EndIf
 						Next
 
-						If loc = -1 Then
+						If loc = -1 And (Not hasOverride) Then
 							loc% = GetINISectionLocation(iniStr, strtemp)
 						EndIf
 
@@ -7042,7 +7056,7 @@ Function DrawMenu()
 	If api_GetFocus() = 0 Lor steamOverlayActive Then ;Game is out of focus -> pause the game
 		If (Not Using294) Then
 			MenuOpen = True
-			PauseSounds()
+			UpdateMenuState()
 		EndIf
 		;Reduce the CPU take while game is not in focus, unless Steam overlay is active
 		If Not steamOverlayActive Then Delay 1000
@@ -7072,6 +7086,8 @@ Function DrawMenu()
 		EndIf
 		
 		InvOpen = False
+		OtherOpen = Null
+		SelectedScreen = Null
 		
 		width = ImageWidth(PauseMenuIMG)
 		height = ImageHeight(PauseMenuIMG)
@@ -7596,8 +7612,7 @@ Function DrawMenu()
 				
 				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Resume", True, True) Then
 					MenuOpen = False
-					ResumeSounds()
-					MouseXSpeed() : MouseYSpeed() : MouseZSpeed() : mouse_x_speed_1#=0.0 : mouse_y_speed_1#=0.0
+					UpdateMenuState()
 				EndIf
 				
 				y = y + 75*MenuScale
@@ -8196,12 +8211,8 @@ Function LoadEntities()
 	FreeTexture tex
 	
 	;[End Block]
-	
-	For m.Mods = Each Mods
-		Local modMatPath$ = m\Path + MATERIALS_DATA_PATH
-		If FileType(modMatPath) = 1 Then LoadMaterials(modMatPath)
-	Next
-	LoadMaterials(MATERIALS_DATA_PATH)
+
+	InitMaterials()
 	
 	OBJTunnel(0)=LoadRMesh("GFX\map\mt1.rmesh",Null)	
 	HideEntity OBJTunnel(0)				
@@ -8289,6 +8300,19 @@ Function LoadEntities()
 	SetTemplateSizeVel(t0, .01, 1.01)
 	SetTemplateGravity(ParticleEffect[2], 0.005)
 	SetTemplateSubTemplate(ParticleEffect[2], t0)
+
+	;Big doors closing
+	ParticleEffect[3] = CreateTemplate()
+	SetTemplateEmitterBlend(ParticleEffect[3], 3)
+	SetTemplateEmitterLifeTime(ParticleEffect[3], 0)
+	SetTemplateParticlesPerInterval(ParticleEffect[3], 80)
+	SetTemplateParticleLifeTime(ParticleEffect[3], 90, 100)
+	SetTemplateTexture(ParticleEffect[3], "GFX\dust.jpg", 2, 1)
+	SetTemplateOffset(ParticleEffect[3], -0.2, 0.2, 0.0, 1.2, -0.2, 0.2)
+	SetTemplateVelocity(ParticleEffect[3], -0.005, 0.005, -0.0017, 0.0017, -0.005, 0.005)
+	SetTemplateSizeVel(ParticleEffect[3], -0.000005, 1)
+	SetTemplateSize(ParticleEffect[3], 0.005, 0.005)
+	SetTemplateAlphaVel(ParticleEffect[3], True)
 	
 	Room2slCam = CreateCamera()
 	CameraViewport(Room2slCam, 0, 0, 128, 128)
@@ -8804,11 +8828,12 @@ Function NullGame(playbuttonsfx%=True)
 	QuitMSG% = -1
 	AchievementsMenu% = -1
 	
-	MusicVolume# = PrevMusicVolume
 	SFXVolume# = PrevSFXVolume
 	DeafPlayer% = False
 	DeafTimer# = 0.0
 	
+	GuaranteedOmni% = False
+
 	IsZombie% = False
 	
 	Delete Each AchievementMsg
@@ -8920,7 +8945,7 @@ Function UpdateMusic()
 		
 		If NowPlaying < 66
 			If CurrMusic = 0
-				MusicCHN = StreamSound_Strict("SFX\Music\"+Music(NowPlaying)+".ogg",0.0,Mode)
+				MusicCHN = StreamSound_Strict("SFX\Music\"+Music(NowPlaying)+".ogg",0.0)
 				CurrMusic = 1
 			EndIf
 			SetStreamVolume_Strict(MusicCHN,CurrMusicVolume)
@@ -9630,19 +9655,19 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 							
 							Select SelectedDifficulty\otherFactors
 								Case EASY
-									If Rand(0,((MAXACHIEVEMENTS-1)*3)-((CurrAchvAmount-1)*3))=0
+									If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*3)-((CurrAchvAmount-1)*3))=0
 										it2 = CreateItem("Key Card Omni", "key6", x, y, z)
 									Else
 										it2 = CreateItem("Mastercard", "misc", x, y, z)
 									EndIf
 								Case NORMAL
-									If Rand(0,((MAXACHIEVEMENTS-1)*4)-((CurrAchvAmount-1)*3))=0
+									If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*4)-((CurrAchvAmount-1)*3))=0
 										it2 = CreateItem("Key Card Omni", "key6", x, y, z)
 									Else
 										it2 = CreateItem("Mastercard", "misc", x, y, z)
 									EndIf
 								Case HARD
-									If Rand(0,((MAXACHIEVEMENTS-1)*5)-((CurrAchvAmount-1)*3))=0
+									If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*5)-((CurrAchvAmount-1)*3))=0
 										it2 = CreateItem("Key Card Omni", "key6", x, y, z)
 									Else
 										it2 = CreateItem("Mastercard", "misc", x, y, z)
@@ -9661,19 +9686,19 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					
 					Select SelectedDifficulty\otherFactors
 						Case EASY
-							If Rand(0,((MAXACHIEVEMENTS-1)*3)-((CurrAchvAmount-1)*3))=0
+							If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*3)-((CurrAchvAmount-1)*3))=0
 								it2 = CreateItem("Key Card Omni", "key6", x, y, z)
 							Else
 								it2 = CreateItem("Mastercard", "misc", x, y, z)
 							EndIf
 						Case NORMAL
-							If Rand(0,((MAXACHIEVEMENTS-1)*4)-((CurrAchvAmount-1)*3))=0
+							If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*4)-((CurrAchvAmount-1)*3))=0
 								it2 = CreateItem("Key Card Omni", "key6", x, y, z)
 							Else
 								it2 = CreateItem("Mastercard", "misc", x, y, z)
 							EndIf
 						Case HARD
-							If Rand(0,((MAXACHIEVEMENTS-1)*5)-((CurrAchvAmount-1)*3))=0
+							If GuaranteedOmni Lor Rand(0,((MAXACHIEVEMENTS-1)*5)-((CurrAchvAmount-1)*3))=0
 								it2 = CreateItem("Key Card Omni", "key6", x, y, z)
 							Else
 								it2 = CreateItem("Mastercard", "misc", x, y, z)
@@ -9964,8 +9989,6 @@ End Function
 Function Use294()
 	Local x#,y#, xtemp%,ytemp%, strtemp$, temp%
 	
-	ShowPointer()
-	
 	x = GraphicWidth/2 - (ImageWidth(Panel294)/2)
 	y = GraphicHeight/2 - (ImageHeight(Panel294)/2)
 	DrawImage Panel294, x, y
@@ -10079,6 +10102,7 @@ Function Use294()
 				
 				Local iniStr$ = "DATA\SCP-294.ini"
 				Local loc% = -1
+				Local hasOverride%
 				If Input294<>""
 					For m.ActiveMods = Each ActiveMods
 						Local modIniStr$ = m\Path + iniStr
@@ -10089,10 +10113,14 @@ Function Use294()
 								loc = sectionLocation
 								Exit
 							EndIf
+							If FileType(modIniStr + ".OVERRIDE") Then
+								hasOverride = True
+								Exit
+							EndIf
 						EndIf
 					Next
 
-					If loc = -1 Then
+					If loc = -1 And (Not hasOverride) Then
 						loc = GetINISectionLocation(iniStr, Input294)
 					EndIf
 				EndIf
@@ -10874,7 +10902,14 @@ Function GetINIString$(file$, section$, parameter$, defaultvalue$="")
 	Return defaultvalue
 End Function
 
-Function ParseIniInt%(txt$)
+Function ClearLoadedINIFiles()
+	For ini.INIFile = Each INIFile
+		If ini\bank <> 0 Then FreeBank ini\bank
+		Delete ini
+	Next
+End Function
+
+Function ParseINIInt%(txt$)
 	txt = Lower(Trim(txt))
 	If txt = "true" Then
 		Return 1
@@ -10887,7 +10922,7 @@ End Function
 
 Function GetINIInt%(file$, section$, parameter$, defaultvalue% = 0)
 	Local txt$ = GetINIString(file$, section$, parameter$, defaultvalue)
-	Return ParseIniInt(txt)
+	Return ParseINIInt(txt)
 End Function
 
 Function GetINIFloat#(file$, section$, parameter$, defaultvalue# = 0.0)
@@ -11728,7 +11763,7 @@ End Function
 
 Function PlayStartupVideos()
 
-	If GetINIInt("options.ini","options","play startup video")=0 Then Return
+	If GetINIInt("options.ini","options","play startup video") = 0 Lor IsRestart Then Return
 
 	PlayMovie("GFX\menu\startup_Undertow")
 	PlayMovie("GFX\menu\startup_TSS")

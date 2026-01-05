@@ -8,9 +8,9 @@ Type Mods
     Field Name$
     Field Description$
     Field Author$
-    Field IconPath$
-    Field Icon%
-    Field IsActive%
+    Field IconPath$, Icon%, DisabledIcon%
+    Field RequiresReload%
+    Field IsNew%, IsActive%
     Field SteamWorkshopId$
     Field IsUserOwner%
 End Type
@@ -21,6 +21,7 @@ Const STEAM_ITEM_ID_FILENAME$ = "steam_itemid.txt"
 
 Function InstantiateMod.Mods(id$, path$)
     m.Mods = new Mods
+    m\IsNew = True
     m\Id = id
     m\Path = path
     Local modIni$ = m\Path + "info.ini"
@@ -39,9 +40,12 @@ Function InstantiateMod.Mods(id$, path$)
                     m\Description = value
                 Case "author"
                     m\Author = value
+                Case "requires reload"
+                    m\RequiresReload = ParseINIInt(value)
             End Select
         EndIf
     Wend
+    CloseFile(ini)
 
     If m\Name = "" Then RuntimeError("Mod at " + Chr(34) + m\Path + Chr(34) + " is missing a name in its info.ini file.")
     For m2.Mods = Each Mods
@@ -105,12 +109,14 @@ Function ReloadMods()
                     If key = m\Id Then
                         Insert m After firstSorted
                         firstSorted = m
-                        m\IsActive = ParseIniInt(value)
+                        m\IsActive = ParseINIInt(value)
+                        m\IsNew = False
                         Exit
                     EndIf
                 Next
             EndIf
         Wend
+        CloseFile(mods)
     EndIf
     
     UpdateActiveMods()
@@ -188,7 +194,11 @@ End Function
 Function UpdateMod(m.Mods, changelog$)
     If UpdatingMod <> Null Then Return
     UpdatingMod = m
-    Steam_UpdateItem(m\SteamworkshopId, m\Name, m\Description, m\Path, DetermineIcon(m), changelog)
+    Local desc$ = ""
+    If Not ShouldKeepModDescription Then
+        desc = m\Description
+    EndIf
+    Steam_UpdateItem(m\SteamworkshopId, m\Name, desc, m\Path, DetermineIcon(m), changelog)
 End Function
 
 Function UpdateUpdatingMod()

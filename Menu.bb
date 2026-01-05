@@ -59,7 +59,11 @@ Global CurrLoadGamePage% = 0
 ; 0 is idle; 1 is upload confirmation; 2 is update confirmation 
 Global ModUIState%
 Global ModChangelog$
+Global ShouldKeepModDescription% = True
+Global ModsDirty% = False
 Global SelectedMod.Mods
+Global NewModBlink% = LoadImage_Strict("GFX\newmod.png")
+ResizeImage(NewModBlink, 24 * MenuScale, 24 * MenuScale)
 
 Function EllipsisLeft$(txt$, maxLen%)
 	If Len(txt) > maxLen Then Return Left(txt, maxLen-3) + "…"
@@ -266,7 +270,12 @@ Function UpdateMainMenu()
 				Case 8
 					MainMenuTab = 0
 					SerializeMods()
-					UpdateActiveMods()
+					If ModsDirty Then
+						ModsDirty = False
+						Restart()
+					Else
+						UpdateActiveMods()
+					EndIf
 				Default
 					MainMenuTab = 0
 			End Select
@@ -1183,87 +1192,132 @@ Function UpdateMainMenu()
 				If CurrLoadGamePage > Ceil(Float(ModCount)/6.0)-1 Then
 					CurrLoadGamePage = CurrLoadGamePage - 1
 				EndIf
-				
+
 				If ModCount = 0 Then
 					Text (x + 20 * MenuScale, y + 20 * MenuScale, "No mods.")
 				Else
-					x = x + 20 * MenuScale
-					y = y + 20 * MenuScale
+					x = x + 10 * MenuScale
+					y = y + (20 + 5 * 80) * MenuScale
 					
 					UpdateUpdatingMod()
 
-					i% = 1
+					Local xStart = x
+
+					Local milis% = MilliSecs()
+					i% = ModCount
+					If (i Mod 6) <> 0 Then i = i - (i Mod 6) + 6
 					Local drawn% = 0
-					For m.Mods = Each Mods
-						If i => (1+(6*CurrLoadGamePage)) Then
-							DrawFrame(x,y,540* MenuScale, 70 * MenuScale)
-							If m\Icon = 0 And m\Iconpath <> "" Then
-								m\Icon = LoadImage_Strict(m\IconPath)
-								ResizeImage(m\Icon, 64 * MenuScale, 64 * MenuScale)
-							EndIf
+					Local m.Mods = Last Mods
+					Repeat
+						If i <= (6+(6*CurrLoadGamePage)) Then
+							If i <= ModCount Then
+								x = xStart
 
-							If m\Icon <> 0 Then
-								DrawImage(m\Icon, x + 3 * MenuScale, y + 3 * MenuScale)
-							EndIf
+								Local mActive = DrawTick(x, y + 25 * MenuScale, m\IsActive)
+								If mActive <> m\IsActive Then
+									m\IsActive = mActive
+									m\IsNew = False
+									If m\RequiresReload Then ModsDirty = True
+								EndIf
 
-							Text(x + 85 * MenuScale, y + 10 * MenuScale, EllipsisLeft(m\Name, 24))
-							Text(x + 85 * MenuScale, y + (10+18) * MenuScale, EllipsisLeft(m\Description, 24))
-							Text(x + 85 * MenuScale, y + (10+18*2) * MenuScale, EllipsisLeft(m\Author, 24))
-							m\IsActive = DrawTick(x + 370 * MenuScale, y + 25 * MenuScale, m\IsActive)
+								x = x + 25 * MenuScale
 
-							If DrawButton(x + 500 * MenuScale, y + 10 * MenuScale, 30 * MenuScale, 20 * MenuScale, "▲", False, False, i = 1) Then
-								Insert m Before Before m
-							EndIf
-							
-							If DrawButton(x + 500 * MenuScale, y + (70 - 30) * MenuScale, 30 * MenuScale, 20 * MenuScale, "▼", False, False, i = ModCount) Then
-								Insert m After After m
-							EndIf
+								DrawFrame(x,y,490* MenuScale, 70 * MenuScale)
+								If m\Icon = 0 And m\Iconpath <> "" Then
+									m\Icon = LoadImage_Strict(m\IconPath)
+									m\DisabledIcon = CreateGrayScaleImage(m\Icon)
+									ResizeImage(m\Icon, 64 * MenuScale, 64 * MenuScale)
+									ResizeImage(m\DisabledIcon, 64 * MenuScale, 64 * MenuScale)
+								EndIf
 
-							If UpdatingMod = m Then
-								Local strr$ = ""
-								Local slice% = (MilliSecs() Mod 1200) / 200
-								Select slice
-									Case 0
-										strr = "   "
-									Case 1
-										strr = ".  "
-									Case 2
-										strr = ".. "
-									Case 3
-										strr = "..."
-									Case 4
-										strr = " .."
-									Case 5
-										strr = "  ."
-								End Select
-								DrawButton(x + 395 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, strr, False, False, True)
-							Else
-								Local buttonsInactive% = UpdateModErrorCode <> 0 Or ModUIState <> 0 Or UpdatingMod <> Null Or (Not SteamActive)
-								If m\SteamWorkshopId = "" Then
-									If DrawButton(x + 395 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Upload", False, False, buttonsInactive) Then
-										ModUIState = 1
-										SelectedMod = m
-									EndIf
+								If m\Icon <> 0 Then
+									Local ico%
+									If m\IsActive Then ico = m\Icon Else ico = m\DisabledIcon
+									DrawImage(ico, x + 3 * MenuScale, y + 3 * MenuScale)
+								EndIf
+
+								If m\IsNew And milis Mod 1200 >= 600 Then DrawImage(NewModBlink, x + 2 * MenuScale, y + 2 * MenuScale)
+
+								If m\IsActive Then
+									Color 255, 255, 255
 								Else
-									If m\IsUserOwner Then
-										If DrawButton(x + 395 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Update", False, False, buttonsInactive) Then
-											ModUIState = 2
+									Color 150, 150, 150
+								EndIf
+
+								Text(x + 85 * MenuScale, y + 10 * MenuScale, EllipsisLeft(m\Name, 24))
+								Text(x + 85 * MenuScale, y + (10+18) * MenuScale, EllipsisLeft(m\Description, 24))
+								Text(x + 85 * MenuScale, y + (10+18*2) * MenuScale, EllipsisLeft(m\Author, 24))
+
+								If DrawButton(x + 500 * MenuScale, y + 10 * MenuScale, 30 * MenuScale, 20 * MenuScale, "▲", False, False, i = 1) Then
+									Insert m Before Before m
+									m = After m
+									If m\IsActive And m\RequiresReload Then ModsDirty = True
+								EndIf
+								
+								If DrawButton(x + 500 * MenuScale, y + (70 - 30) * MenuScale, 30 * MenuScale, 20 * MenuScale, "▼", False, False, i = ModCount) Then
+									Insert m After After m
+									m = Before m
+									If m\IsActive And m\RequiresReload Then ModsDirty = True
+								EndIf
+
+								If UpdatingMod = m Then
+									Local strr$ = ""
+									Local slice% = (milis Mod 1200) / 200
+									Select slice
+										Case 0
+											strr = "   "
+										Case 1
+											strr = ".  "
+										Case 2
+											strr = ".. "
+										Case 3
+											strr = "..."
+										Case 4
+											strr = " .."
+										Case 5
+											strr = "  ."
+									End Select
+									DrawButton(x + 370 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, strr, False, False, True)
+								Else
+									Local buttonsInactive% = UpdateModErrorCode <> 0 Or ModUIState <> 0 Or UpdatingMod <> Null Or (Not SteamActive)
+									If m\SteamWorkshopId = "" Then
+										If DrawButton(x + 370 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Upload", False, False, buttonsInactive) Then
+											ModUIState = 1
 											SelectedMod = m
 										EndIf
 									Else
-										If DrawButton(x + 395 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Visit", False, False, buttonsInactive) Then
-											VisitModPage(m)
+										If m\IsUserOwner Then
+											If DrawButton(x + 370 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Update", False, False, buttonsInactive) Then
+												ModUIState = 2
+												SelectedMod = m
+											EndIf
+										Else
+											If DrawButton(x + 370 * MenuScale, y + 20 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Visit", False, False, buttonsInactive) Then
+												VisitModPage(m)
+											EndIf
 										EndIf
 									EndIf
 								EndIf
+
+								If Len(m\Name) > 24 And MouseX() > x + 85 * MenuScale And MouseY() > y + 10 * MenuScale And MouseX() < x + 340 * MenuScale And MouseY() < y + (10 + 15) * MenuScale Then
+									DrawFramedRowText(m\Name, MouseX(), MouseY(), 400 * MenuScale)
+								EndIf
+
+								If Len(m\Description) > 24 And MouseX() > x + 85 * MenuScale And MouseY() > y + (10 + 18) * MenuScale And MouseX() < x + 340 * MenuScale And MouseY() < y + (10 + 15 + 18) * MenuScale Then
+									DrawFramedRowText(m\Description, MouseX(), MouseY(), 400 * MenuScale)
+								EndIf
+
+								If Len(m\Author) > 24 And MouseX() > x + 85 * MenuScale And MouseY() > y + (10 + 2*18) * MenuScale And MouseX() < x + 340 * MenuScale And MouseY() < y + (10 + 15 + 2*18) * MenuScale Then
+									DrawFramedRowText(m\Author, MouseX(), MouseY(), 400 * MenuScale)
+								EndIf
 							EndIf
 
-							y = y + 80 * MenuScale
+							y = y - 80 * MenuScale
 							drawn = drawn + 1
-							If drawn => 6 Then Exit
 						EndIf
-						i = i + 1
-					Next
+						If i <= ModCount Then m = Before m
+						i = i - 1
+					Until i <= 0 Lor drawn => 6
 
 					x = 740 * MenuScale
 					y = 376 * MenuScale
@@ -1293,17 +1347,36 @@ Function UpdateMainMenu()
 						DrawFrame(x, y, 420 * MenuScale, 200 * MenuScale)
 						RowText("Are you sure you want to update this item? If so, you can enter a list of changes below:", x + 20 * MenuScale, y + 15 * MenuScale, 400 * MenuScale, 200 * MenuScale)
 						ModChangelog = InputBox(x + 20 * MenuScale, y + 80 * MenuScale, 380 * MenuScale, 30 * MenuScale, ModChangelog, 99)
-						If DrawButton(x + 50 * MenuScale, y + 150 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Yes", False) Then
+						Text(x + 20 * MenuScale, y + 125 * MenuScale, "Keep current description?")
+						ShouldKeepModDescription = DrawTick(x + 325 * MenuScale, y + 121 * MenuScale, ShouldKeepModDescription)
+						If DrawButton(x + 50 * MenuScale, y + 155 * MenuScale, 100 * MenuScale, 30 * MenuScale, "Yes", False) Then
 							UpdateMod(SelectedMod, ModChangelog)
 							ModChangelog = ""
 							ModUIState = 0
 							SelectedMod = Null
 						EndIf
-						If DrawButton(x + 250 * MenuScale, y + 150 * MenuScale, 100 * MenuScale, 30 * MenuScale, "No", False) Then
+						If DrawButton(x + 250 * MenuScale, y + 155 * MenuScale, 100 * MenuScale, 30 * MenuScale, "No", False) Then
 							ModChangelog = ""
 							ModUIState = 0
 							SelectedMod = Null
 						EndIf
+					Else
+						If DrawButton(x + 10 * MenuScale, y, 150 * MenuScale, 30 * MenuScale, "Reload mods", False) Then
+							SerializeMods()
+							ReloadMods()
+						EndIf
+
+						If DrawButton(x + 10 * MenuScale, y + 40 * MenuScale, 150 * MenuScale, 30 * MenuScale, "Reload game", False) Then
+							SerializeMods()
+							Restart()
+							Return
+						EndIf
+
+						If DrawButton(x + 10 * MenuScale, y + 80 * MenuScale, 150 * MenuScale, 50 * MenuScale, "", False) Then
+							ExecFile("Mods")
+						EndIf
+						Text(x + (10 + 150 / 2) * MenuScale, y + (80 + 50 / 2 - 10) * MenuScale, "Open local", True, True)
+						Text(x + (10 + 150 / 2) * MenuScale, y + (80 + 50 / 2 + 10) * MenuScale, "mods folder", True, True)
 					EndIf
 				EndIf
 
@@ -1320,6 +1393,24 @@ Function UpdateMainMenu()
 	If Fullscreen Then DrawImage CursorIMG, ScaledMouseX(),ScaledMouseY()
 	
 	SetFont Font1
+End Function
+
+Function CreateGrayScaleImage%(img%)
+	Local ret% = CreateImage(ImageWidth(img), ImageHeight(img))
+	Local rbuf% = ImageBuffer(img)
+	Local buf% = ImageBuffer(ret)
+	LockBuffer(rbuf)
+	LockBuffer(buf)
+	For x = 0 To ImageWidth(img)-1
+		For y = 0 To ImageHeight(img)-1
+			Local color% = ReadPixelFast(x, y, rbuf)
+			Local g% = ((color Shr 16) And 255) * 0.21 + ((color Shr 8) And 255) * 0.72 + (color And 255) * 0.07
+			WritePixelFast(x, y, (color And $FF000000) + (g Shl 16) + (g Shl 8) + g, buf)
+		Next
+	Next
+	UnlockBuffer(rbuf)
+	UnlockBuffer(buf)
+	Return ret
 End Function
 
 Dim GfxDrivers$(0)
@@ -1532,7 +1623,25 @@ Type LoadingScreens
 	Field txt$[5], txtamount%
 End Type
 
-Function InitLoadingScreens(file$)
+Const LOADING_SCREENS_DATA_PATH$ = "Loadingscreens\loadingscreens.ini"
+
+Function InitLoadingScreens()
+	Delete Each LoadingScreens
+	Local hasOverride%
+	For m.ActiveMods = Each ActiveMods
+		Local modPath$ = m\Path + LOADING_SCREENS_DATA_PATH
+		If FileType(modPath) = 1 Then
+			LoadLoadingScreens(modPath)
+			If FileType(modPath + ".OVERRIDE") = 1 Then
+				hasOverride = True
+				Exit
+			EndIf
+		EndIf
+	Next
+	If Not hasOverride Then LoadLoadingScreens(LOADING_SCREENS_DATA_PATH)
+End Function
+
+Function LoadLoadingScreens(file$)
 	Local TemporaryString$, i%
 	Local ls.LoadingScreens
 	
@@ -1781,18 +1890,20 @@ Function InputBox$(x%, y%, width%, height%, Txt$, ID% = 0)
 	Text(x + width / 2, y + height / 2, Txt, True, True)
 
 	If SelectedInputBox = ID Then
-		If (MilliSecs() Mod 800) < 400 Then Rect (x + width / 2 + StringWidth(Txt) / 2 + 2, y + height / 2 - 5, 2, 12)
+		If (MilliSecs() Mod 800) < 400 Then Rect (x + width / 2 + StringWidth(Txt) / 2 + 2, y + height / 2 - 17 * MenuScale / 2, 2, 17 * MenuScale)
 		Txt = TextInput(Txt)
 	EndIf
 		
 	Return Txt
 End Function
 
-Function DrawFrame(x%, y%, width%, height%, xoffset%=0, yoffset%=0)
+Function DrawFrame(x%, y%, width%, height%, xoffset%=0, yoffset%=0, scrollY%=True)
+	Local srcY%
+	If scrollY Then srcY = y Mod 256
 	Color 255, 255, 255
-	DrawTiledImageRect(MenuWhite, xoffset, (y Mod 256), 512, 512, x, y, width, height)
+	DrawTiledImageRect(MenuWhite, xoffset, srcY, 512, 512, x, y, width, height)
 	
-	DrawTiledImageRect(MenuBlack, yoffset, (y Mod 256), 512, 512, x+3*MenuScale, y+3*MenuScale, width-6*MenuScale, height-6*MenuScale)	
+	DrawTiledImageRect(MenuBlack, yoffset, srcY, 512, 512, x+3*MenuScale, y+3*MenuScale, width-6*MenuScale, height-6*MenuScale)	
 End Function
 
 Function DrawButton%(x%, y%, width%, height%, txt$, bigfont% = True, waitForMouseUp%=False, disabled%=False)
@@ -2290,6 +2401,13 @@ Function DrawOptionsTooltip(x%,y%,width%,height%,option$,value#=0,ingame%=False)
 		Color R,G,B
 		RowText(txt2,fx,(fy+(StringHeight(txt)*lines)+(5+lines)*MenuScale),fw,fh)
 	EndIf
+End Function
+
+Function DrawFramedRowText(txt$, x%, y%, width%)
+	Local fw% = width - 12*MenuScale
+	Local lines% = GetLineAmount(txt, fw, 0)
+	DrawFrame(x, y, width, ((StringHeight(txt)*lines)+(10+lines)*MenuScale), 0, 0, False)
+	RowText(txt, x + 6*MenuScale, y + 6*MenuScale, fw, 0)
 End Function
 
 Function DrawMapCreatorTooltip(x%,y%,width%,height%,mapname$)

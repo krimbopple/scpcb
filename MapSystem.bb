@@ -7339,7 +7339,7 @@ Function CreateMap()
 	Dim MaxPositions%(ROOM4 + 1, ZONEAMOUNT)
 	For rs = ROOM1 To ROOM4
 		For z = 1 To ZONEAMOUNT
-			MinPositions(rs, z) = 0
+			MinPositions(rs, z) = 1
 			MaxPositions(rs, z) = RoomAmounts(rs, 1)-1
 			If z > 1 Then
 				MinPositions(rs, z) = MinPositions(rs, z) + RoomAmounts(rs, 1)

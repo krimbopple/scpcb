@@ -7129,8 +7129,8 @@ Function UpdateEvents()
 							e\SoundCHN2 = PlaySound2(e\room\NPC[0]\Sound, Camera, e\room\NPC[0]\Collider, 15.0)
 						EndIf
 						UpdateSoundOrigin(e\SoundCHN2,Camera,e\room\NPC[0]\Collider,15.0)
-						If (Not ChannelPlaying(e\SoundCHN2)) Then RemoveEvent(e)
 					EndIf
+					If e\EventState2 And (e\SoundCHN2 = 0 Lor (Not ChannelPlaying(e\SoundCHN2))) Then RemoveEvent(e)
 				EndIf
 				;[End Block]
 				

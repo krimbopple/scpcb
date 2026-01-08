@@ -1298,6 +1298,8 @@ Function UpdateNPCs()
 						;[End Block]
 					Case 4
 						;[Block]
+						CanSave = False
+						
 						CurrCameraZoom = CurveValue(Max(CurrCameraZoom, (Sin(Float(MilliSecs())/20.0)+1.0) * 10.0),CurrCameraZoom,8.0)
 						
 						If n\Target = Null Then 
@@ -1480,6 +1482,8 @@ Function UpdateNPCs()
 						
 						;[End Block]
 					Case 1,2,3
+						CanSave = False
+
 						;[Block]
 						;If n\Sound = 0 Then
 						;	n\Sound = LoadSound_Strict("SFX\Music\096Angered.ogg")

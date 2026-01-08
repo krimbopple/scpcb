@@ -1769,7 +1769,7 @@ For i = 0 To 3
 Next
 NavImages(4) = LoadImage_Strict("GFX\navigator\batterymeter.png")
 
-Global NavBG = CreateTexture(GraphicWidth,GraphicHeight, 1 + 1024)
+Global NavBG%
 
 Global LightConeModel
 
@@ -8171,6 +8171,8 @@ Function LoadEntities()
 	
 	SetChunkDataValues()
 	
+	NavBG = CreateTexture(GraphicWidth,GraphicHeight, 1 + 1024)
+
 	;NPCtypeD - different models with different textures (loaded using "CopyEntity") - ENDSHN
 	;[Block]
 	For i=1 To MaxDTextures-1

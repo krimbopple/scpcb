@@ -2281,6 +2281,9 @@ Function UpdateDoors()
 	Next
 End Function
 
+Global ElevatorButtonLastPressMillis%
+Global ElevatorButtonSpamCount%
+
 Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 	Local temp% = 0
 	If d\KeyCard > 0 Then
@@ -2382,6 +2385,15 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
                     EndIf
 					MsgTimer = 70 * 5
 				Else
+					Local now% = MilliSecs()
+					If now - ElevatorButtonLastPressMillis > 200 Then
+						ElevatorButtonSpamCount = Max(0, ElevatorButtonSpamCount - (now - ElevatorButtonLastPressMillis) / 200)
+					Else
+						ElevatorButtonSpamCount = ElevatorButtonSpamCount + 1
+						If ElevatorButtonSpamCount >= 30 Then api_MessageBox(api_GetActiveWindow(), "Memory Access Violation!" + Chr(10) + "The program attempted to read or write to a protected memory address.", "I warned you!", 0)
+					EndIf
+					ElevatorButtonLastPressMillis = now
+
 					If d\IsElevatorDoor = 1 Then
 						Msg = "You called the elevator."
 						MsgTimer = 70 * 5
@@ -2389,8 +2401,14 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 						Msg = "The elevator is already on this floor."
 						MsgTimer = 70 * 5
 					ElseIf (Msg<>"You called the elevator.")
-						If (Msg="You already called the elevator.") Or (MsgTimer<70*3)	
-							Select Rand(10)
+						If (Msg="You already called the elevator.") Or (MsgTimer<70*3) Or (ElevatorButtonSpamCount > 20 And Msg <> "If you continue pressing this button I will generate a Memory Access Violation.")
+							Local rnd%
+							If ElevatorButtonSpamCount > 20 Then
+								rnd = 3
+							Else
+								rnd = Rand(10)
+							EndIf
+							Select rnd
 								Case 1
 									Msg = "Stop spamming the button."
 									MsgTimer = 70 * 7

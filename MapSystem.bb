@@ -7422,8 +7422,8 @@ Function CreateMap()
 				Else ;If zone = 3
 					r = CreateRoom(zone, ROOM2, x * 8, 0, y * 8, "checkpoint2")
 				EndIf
+				CalculateRoomExtents(r)
 			ElseIf MapTemp(x, y) > 0
-				
 				Local angle%
 
 				temp = Min(MapTemp(x + 1, y),1) + Min(MapTemp(x - 1, y),1) + Min(MapTemp(x, y + 1),1) + Min(MapTemp(x, y - 1),1)
@@ -7501,10 +7501,8 @@ Function CreateMap()
 						r = CreateRoom(zone, ROOM4, x * 8, 0, y * 8, 0, MapName(x, y))
 						MapRoomID(ROOM4)=MapRoomID(ROOM4)+1
 				End Select
-				
+				CalculateRoomExtents(r)
 			EndIf
-			
-			CalculateRoomExtents(r)
 		Next
 	Next		
 	

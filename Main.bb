@@ -2378,7 +2378,7 @@ Function UseDoor(d.Doors, showmsg%=True, playsfx%=True)
 					Local now% = MilliSecs()
 					If now - ElevatorButtonLastPressMillis > 200 Then
 						ElevatorButtonSpamCount = Max(0, ElevatorButtonSpamCount - (now - ElevatorButtonLastPressMillis) / 200)
-					Else
+					Else If d\IsElevatorDoor <> 3
 						ElevatorButtonSpamCount = ElevatorButtonSpamCount + 1
 						If ElevatorButtonSpamCount >= 30 Then api_MessageBox(api_GetActiveWindow(), "Memory Access Violation!" + Chr(10) + "The program attempted to read or write to a protected memory address.", "I warned you!", 0)
 					EndIf

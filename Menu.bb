@@ -249,7 +249,7 @@ Function UpdateMainMenu()
 		
 		DrawFrame(x, y, width, height)
 		
-		If DrawButton(x + width + 20 * MenuScale, y, 580 * MenuScale - width - 20 * MenuScale, height, "BACK", False) Then 
+		If DrawButton(x + width + 20 * MenuScale, y, 580 * MenuScale - width - 20 * MenuScale, height, "BACK", False, False, UpdatingMod<>Null) Then 
 			Select MainMenuTab
 				Case 1
 					PutINIValue(OptionFile, "options", "intro enabled", IntroEnabled%)
@@ -1377,18 +1377,18 @@ Function UpdateMainMenu()
 							SelectedMod = Null
 						EndIf
 					Else
-						If DrawButton(x + 10 * MenuScale, y, 150 * MenuScale, 30 * MenuScale, "Reload mods", False) Then
+						If DrawButton(x + 10 * MenuScale, y, 150 * MenuScale, 30 * MenuScale, "Reload mods", False, False, UpdatingMod<>Null) Then
 							SerializeMods()
 							ReloadMods()
 						EndIf
 
-						If DrawButton(x + 10 * MenuScale, y + 40 * MenuScale, 150 * MenuScale, 30 * MenuScale, "Reload game", False) Then
+						If DrawButton(x + 10 * MenuScale, y + 40 * MenuScale, 150 * MenuScale, 30 * MenuScale, "Reload game", False, False, UpdatingMod<>Null) Then
 							SerializeMods()
 							Restart()
 							Return
 						EndIf
 
-						If DrawButton(x + 10 * MenuScale, y + 80 * MenuScale, 150 * MenuScale, 50 * MenuScale, "", False) Then
+						If DrawButton(x + 10 * MenuScale, y + 80 * MenuScale, 150 * MenuScale, 50 * MenuScale, "", False, False, UpdatingMod<>Null) Then
 							ExecFile("Mods")
 						EndIf
 						Text(x + (10 + 150 / 2) * MenuScale, y + (80 + 50 / 2 - 10) * MenuScale, "Open local", True, True)

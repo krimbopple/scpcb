@@ -4180,15 +4180,7 @@ Function MovePlayer()
 	EndIf
 	
 	If (Not NoClip) Then
-		Local isMoving% = ForceMove>0
-		If (Not isMoving) And Playable Then
-			If MoveInputCancelling Then
-				isMoving = (KeyDown(KEY_DOWN) Xor KeyDown(KEY_UP)) Or (KeyDown(KEY_RIGHT) Xor KeyDown(KEY_LEFT))
-			Else
-				isMoving = KeyDown(KEY_DOWN) Lor KeyDown(KEY_UP) Lor KeyDown(KEY_RIGHT) Lor KeyDown(KEY_LEFT)
-			EndIf
-		EndIf
-		If isMoving Then
+		If ForceMove > 0 Lor Playable And (MoveX <> 0 Lor MoveZ <> 0) Then
 			If Crouch = 0 And (KeyDown(KEY_SPRINT)) And Stamina > 0.0 And (Not IsZombie) Then
 				Sprint = 2.5
 				Stamina = Stamina - FPSfactor * 0.4 * StaminaEffect
@@ -4282,15 +4274,29 @@ Function MovePlayer()
 				MoveZ = KeyDown(KEY_DOWN) - KeyDown(KEY_UP)
 				MoveX = KeyDown(KEY_LEFT) - KeyDown(KEY_RIGHT)
 			Else
-				If KeyHit(KEY_DOWN) MoveZ = 1
-				If KeyHit(KEY_UP) MoveZ = -1
-				If KeyHit(KEY_LEFT) MoveX = 1
-				If KeyHit(KEY_RIGHT) MoveX = -1
-				
-				If MoveZ = 1 And (Not KeyDown(KEY_DOWN)) Then MoveZ = -KeyDown(KEY_UP)
-				If MoveZ = -1 And (Not KeyDown(KEY_UP)) Then MoveZ = KeyDown(KEY_DOWN)
-				If MoveX = 1 And (Not KeyDown(KEY_LEFT)) Then MoveX = -KeyDown(KEY_RIGHT)
-				If MoveX = -1 And (Not KeyDown(KEY_RIGHT)) Then MoveX = KeyDown(KEY_LEFT)
+				If KeyHit(KEY_DOWN) Then
+					MoveZ = 1
+				Else If KeyHit(KEY_UP)
+					MoveZ = -1
+				Else If MoveZ = 1 And (Not KeyDown(KEY_DOWN)) Then
+					MoveZ = -KeyDown(KEY_UP)
+				Else If MoveZ = -1 And (Not KeyDown(KEY_UP)) Then
+					MoveZ = KeyDown(KEY_DOWN)
+				Else If MoveZ = 0 Then
+					MoveZ = KeyDown(KEY_DOWN) - KeyDown(KEY_UP)
+				EndIf
+
+				If KeyHit(KEY_LEFT) Then
+					MoveX = 1
+				Else If KeyHit(KEY_RIGHT)
+					MoveX = -1
+				Else If MoveX = 1 And (Not KeyDown(KEY_LEFT)) Then
+					MoveX = -KeyDown(KEY_RIGHT)
+				Else If MoveX = -1 And (Not KeyDown(KEY_RIGHT)) Then
+					MoveX = KeyDown(KEY_LEFT)
+				Else If MoveX = 0 Then
+					MoveX = KeyDown(KEY_LEFT) - KeyDown(KEY_RIGHT)
+				EndIf
 			EndIf
 
 			If moveZ > 0 And Playable Then

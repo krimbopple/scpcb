@@ -4502,13 +4502,18 @@ Function FillRoom(r.Rooms)
 			EntityParent(it\collider, r\obj)
 			
 			d = CreateDoor(r\zone, r\x - 968.0 * RoomScale, -764.0 * RoomScale, r\z + 1392.0 * RoomScale, 0, r, False, False, 4)
-			d\AutoClose = False : d\open = False	
+			d\AutoClose = False : d\open = False
+			MoveEntity(d\buttons[0], 0, 0, 10)
+			MoveEntity(d\buttons[1], 0, 0, 10)
 			
 			d = CreateDoor(r\zone, r\x, 0, r\z - 464.0 * RoomScale, 0, r, False, False, 4)
-			d\AutoClose = False : d\open = False			
+			d\AutoClose = False : d\open = False
+			MoveEntity(d\buttons[1], 0, 0, 2)
 			
 			d = CreateDoor(r\zone, r\x - 624.0 * RoomScale, -1280.0 * RoomScale, r\z, 90, r, False, False, 4)
-			d\AutoClose = False : d\open = False	
+			d\AutoClose = False : d\open = False
+			MoveEntity(d\buttons[0], 0, 0, 2)
+			MoveEntity(d\buttons[1], 0, 0, 2)
 			
 			r\Objects[6] = LoadMesh_Strict("GFX\map\room1062.b3d")
 			

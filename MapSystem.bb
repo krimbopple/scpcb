@@ -7726,31 +7726,41 @@ Function SetRoom(room_name$,room_type%,pos%,min_pos%,max_pos%) ;place a room wit
 	
 	If max_pos<min_pos Then DebugLog "Can't place "+room_name : Return False
 	
-	DebugLog "--- SETROOM: "+Upper(room_name)+" ---"
-	Local looped%,can_place%
-	looped = False
-	can_place = True
+	DebugLog "--- SETROOM: "+Upper(room_name)+" ---" + min_pos + " " + max_pos
+	Local placed% = False
+	If pos>=(min_pos+max_pos)/2 Then
+		placed = SetRoomUpper(room_name,room_type,pos,max_pos) Lor SetRoomLower(room_name,room_type,pos-1,min_pos)
+	Else
+		placed = SetRoomLower(room_name,room_type,pos,min_pos) Lor SetRoomUpper(room_name,room_type,pos+1,max_pos)
+	EndIf
+
+	If placed Then DebugLog "--------------" Else DebugLog "couldn't place "+room_name
+End Function
+
+Function SetRoomUpper(room_name$,room_type%,pos%,max_pos%)
+	If pos>max_pos Return False
 	While MapRoom(room_type,pos)<>""
 		DebugLog "found "+MapRoom(room_type,pos)
 		pos=pos+1
 		If pos>max_pos Then
-			If looped=False Then
-				pos=min_pos+1 : looped=True
-			Else
-				can_place=False
-				Exit
-			EndIf
+			Return False
 		EndIf
 	Wend
-	DebugLog room_name+" "+Str(pos)
-	If can_place=True Then
-		DebugLog "--------------"
-		MapRoom(room_type,pos)=room_name
-		Return True
-	Else
-		DebugLog "couldn't place "+room_name
-		Return False
-	EndIf
+	MapRoom(room_type,pos)=room_name
+	Return True
+End Function
+
+Function SetRoomLower(room_name$,room_type%,pos%,min_pos%)
+	If pos<max_pos Return False
+	While MapRoom(room_type,pos)<>""
+		DebugLog "found "+MapRoom(room_type,pos) + " " + pos
+		pos=pos-1
+		If pos<min_pos Then
+			Return False
+		EndIf
+	Wend
+	MapRoom(room_type,pos)=room_name
+	Return True
 End Function
 
 Function GetZone(y%)

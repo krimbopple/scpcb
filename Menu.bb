@@ -13,7 +13,8 @@ ResizeImage(QuickLoadIcon, ImageWidth(QuickLoadIcon) * MenuScale, ImageHeight(Qu
 
 For i = 0 To 3
 	ArrowIMG(i) = LoadImage_Strict("GFX\menu\arrow.png")
-	RotateImage(ArrowIMG(i), 90 * i)
+	ScaleImage(ArrowIMG(i), HUDScale, HUDScale)
+	RotateImage(ArrowIMG(i), -90 * i)
 	HandleImage(ArrowIMG(i), 0, 0)
 Next
 
@@ -1739,6 +1740,18 @@ Function GreatestCommonDivsior(u%, v%)
 End Function
 
 
+Function DrawBar(img%, x%, y%, width%, filled#, centerX% = False)
+	Local spacing = ImageWidth(img) + 2
+	width = Int(width / spacing) * spacing + 3
+	Local height = ImageHeight(img) + 6
+	If centerX Then x = x - width / 2
+	Color 255, 255, 255
+	Rect (x, y, width, height, False)
+	For i = 1 To Int(((width - 6) * filled) / spacing)
+		DrawImage(img, x + 3 + spacing * (i - 1), y + 3)
+	Next
+End Function
+
 Function DrawTiledImageRect(img%, srcX%, srcY%, srcwidth#, srcheight#, x%, y%, width%, height%)
 	
 	Local x2% = x
@@ -1898,14 +1911,7 @@ Function DrawLoading(percent%, shortloading=False)
 		
 		DrawImage SelectedLoadingScreen\img, x, y
 		
-		Local width% = 300, height% = 20
-		x% = GraphicWidth / 2 - width / 2
-		y% = GraphicHeight / 2 + 30 - 100
-		
-		Rect(x, y, width+4, height, False)
-		For  i% = 1 To Int((width - 2) * (percent / 100.0) / 10)
-			DrawImage(BlinkMeterIMG, x + 3 + 10 * (i - 1), y + 3)
-		Next
+		DrawBar(BlinkMeterIMG, GraphicWidth / 2, GraphicHeight / 2 - 70 * HUDScale, 300 * HUDScale, percent / 100.0, True)
 		
 		If SelectedLoadingScreen\title = "CWM" Then
 			
@@ -1925,7 +1931,7 @@ Function DrawLoading(percent%, shortloading=False)
 			For i = 0 To temp
 				strtemp$ = STRTEMP + RandomDefaultWidthChar(48,122,"?")
 			Next
-			Text(GraphicWidth / 2, GraphicHeight / 2 + 80, strtemp, True, True)
+			Text(GraphicWidth / 2, GraphicHeight / 2 + 80*HUDScale, strtemp, True, True)
 			
 			If percent = 0 Then 
 				If Rand(5)=1 Then
@@ -1971,20 +1977,20 @@ Function DrawLoading(percent%, shortloading=False)
 				strtemp$ = Replace(SelectedLoadingScreen\txt[0],Mid(SelectedLoadingScreen\txt[0],Rand(1,Len(strtemp)-1),1),RandomDefaultWidthChar(130,250,"?"))
 			Next		
 			SetFont Font1
-			RowText(strtemp, GraphicWidth / 2-200, GraphicHeight / 2 +120,400,300,True)		
+			RowText(strtemp, GraphicWidth / 2-200*HUDScale, GraphicHeight / 2 +120*HUDScale,400*HUDScale,300*HUDScale,True)		
 		Else
 			
 			Color 0,0,0
 			SetFont Font2
-			Text(GraphicWidth / 2 + 1, GraphicHeight / 2 + 80 + 1, SelectedLoadingScreen\title, True, True)
+			Text(GraphicWidth / 2 + 1 * HUDScale, GraphicHeight / 2 + (80+1)*HUDScale, SelectedLoadingScreen\title, True, True)
 			SetFont Font1
-			RowText(SelectedLoadingScreen\txt[LoadingScreenText], GraphicWidth / 2-200+1, GraphicHeight / 2 +120+1,400,300,True)
+			RowText(SelectedLoadingScreen\txt[LoadingScreenText], GraphicWidth / 2-(200+1)*HUDScale, GraphicHeight / 2 +(120+1)*HUDScale,400*HUDScale,300*HUDScale,True)
 			
 			Color 255,255,255
 			SetFont Font2
-			Text(GraphicWidth / 2, GraphicHeight / 2 +80, SelectedLoadingScreen\title, True, True)
+			Text(GraphicWidth / 2, GraphicHeight / 2 +80*HUDScale, SelectedLoadingScreen\title, True, True)
 			SetFont Font1
-			RowText(SelectedLoadingScreen\txt[LoadingScreenText], GraphicWidth / 2-200, GraphicHeight / 2 +120,400,300,True)
+			RowText(SelectedLoadingScreen\txt[LoadingScreenText], GraphicWidth / 2-200*HUDScale, GraphicHeight / 2 +120*HUDScale,400*HUDScale,300*HUDScale,True)
 			
 		EndIf
 
@@ -1993,13 +1999,13 @@ Function DrawLoading(percent%, shortloading=False)
 		EndIf
 		
 		Color 0,0,0
-		Text(GraphicWidth / 2 + 1, GraphicHeight / 2 - 100 + 1, "LOADING - " + percent + " %", True, True)
+		Text(GraphicWidth / 2 + 1 * HUDScale, GraphicHeight / 2 - 100 * HUDScale + 1 * HUDScale, "LOADING - " + percent + " %", True, True)
 		Color 255,255,255
-		Text(GraphicWidth / 2, GraphicHeight / 2 - 100, "LOADING - " + percent + " %", True, True)
+		Text(GraphicWidth / 2, GraphicHeight / 2 - 100 * HUDScale, "LOADING - " + percent + " %", True, True)
 		
 		If percent = 100 Then 
 			If firstloop And SelectedLoadingScreen\title <> "CWM" Then PlaySound_Strict LoadTempSound(("SFX\Horror\Horror8.ogg"))
-			Text(GraphicWidth / 2, GraphicHeight - 50, "PRESS ANY KEY TO CONTINUE", True, True)
+			Text(GraphicWidth / 2, GraphicHeight - 50 * HUDScale, "PRESS ANY KEY TO CONTINUE", True, True)
 		Else
 			FlushKeys()
 			FlushMouse()
@@ -2198,14 +2204,16 @@ Function SlideBar#(x%, y%, width%, value#, ID%)
 		value = Min(Max((ScaledMouseX() - x) * 100 / width, 0), 100)
 	EndIf
 
+	Local height% = ImageHeight(BlinkMeterIMG) + 6
+
 	Color 255,255,255
-	Rect(x, y, width + 14, 20,False)
+	Rect(x, y, width + 14, height,False)
 
 	DrawImage(BlinkMeterIMG, x + width * value / 100.0 +3, y+3)
 	
 	Color 170,170,170 
-	Text (x - 50 * MenuScale, y + 4*MenuScale, "LOW")					
-	Text (x + width + 38 * MenuScale, y+4*MenuScale, "HIGH")	
+	Text (x - 20 * MenuScale - StringWidth("LOW"), y + 3*MenuScale, "LOW")					
+	Text (x + width + 20 * MenuScale + 14, y+3*MenuScale, "HIGH")	
 	
 	Return value
 	

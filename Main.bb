@@ -147,7 +147,8 @@ Else
 	End If
 EndIf
 
-Global MenuScale# = (GraphicHeight / 1024.0)
+Global MenuScale# = (Min(GraphicWidth, GraphicHeight) / 1024.0)
+Global HUDScale# = Max(MenuScale, 1)
 
 SetBuffer(BackBuffer())
 
@@ -194,19 +195,20 @@ InitLoadingScreens()
 ;don't match their "internal name" (i.e. their display name in applications
 ;like Word and such). As a workaround, I moved the files and renamed them so they
 ;can load without FastText.
-Font1% = LoadFont_Strict("GFX\font\cour\Courier New.ttf", Int(19 * (GraphicHeight / 1024.0)))
-Font2% = LoadFont_Strict("GFX\font\cour\Courier New.ttf", Int(52 * (GraphicHeight / 1024.0)))
-Font3% = LoadFont_Strict("GFX\font\DS-DIGI\DS-Digital.ttf", Int(22 * (GraphicHeight / 1024.0)))
-Font4% = LoadFont_Strict("GFX\font\DS-DIGI\DS-Digital.ttf", Int(60 * (GraphicHeight / 1024.0)))
-Font5% = LoadFont_Strict("GFX\font\Journal\Journal.ttf", Int(58 * (GraphicHeight / 1024.0)))
+Font1% = LoadFont_Strict("GFX\font\cour\Courier New.ttf", Int(19 * MenuScale))
+Font2% = LoadFont_Strict("GFX\font\cour\Courier New.ttf", Int(52 * MenuScale))
+Font3% = LoadFont_Strict("GFX\font\DS-DIGI\DS-Digital.ttf", Int(22 * MenuScale))
+Font4% = LoadFont_Strict("GFX\font\DS-DIGI\DS-Digital.ttf", Int(60 * MenuScale))
+Font5% = LoadFont_Strict("GFX\font\Journal\Journal.ttf", Int(58 * MenuScale))
 
 Global CreditsFont%,CreditsFont2%
 
-ConsoleFont% = LoadFont_Strict("GFX\font\cour\Courier New.ttf", Int(20 * (GraphicHeight / 1024.0)))
+ConsoleFont% = LoadFont_Strict("GFX\font\cour\Courier New.ttf", Int(20 * MenuScale))
 
 SetFont Font2
 
 Global BlinkMeterIMG% = LoadImage_Strict("GFX\blinkmeter.jpg")
+ScaleImage(BlinkMeterIMG, HUDScale, HUDScale)
 
 DrawLoading(0, True)
 
@@ -4762,7 +4764,7 @@ Function DrawGUI()
 		
 		FreeEntity (temp)
 		
-		DrawImage(HandIcon, GraphicWidth / 2 + Sin(yawvalue) * (GraphicWidth / 3) - 32, GraphicHeight / 2 - Sin(pitchvalue) * (GraphicHeight / 3) - 32)
+		DrawImage(HandIcon, GraphicWidth / 2 + Sin(yawvalue) * (GraphicWidth / 3) - 32 * HUDScale, GraphicHeight / 2 - Sin(pitchvalue) * (GraphicHeight / 3) - 32 * HUDScale)
 		
 		If MouseUp1 Then
 			MouseUp1 = False
@@ -4785,28 +4787,28 @@ Function DrawGUI()
 		If pitchvalue > 90 And pitchvalue <= 180 Then pitchvalue = 90
 		If pitchvalue > 180 And pitchvalue < 270 Then pitchvalue = 270
 		
-		DrawImage(HandIcon2, GraphicWidth / 2 + Sin(yawvalue) * (GraphicWidth / 3) - 32, GraphicHeight / 2 - Sin(pitchvalue) * (GraphicHeight / 3) - 32)
+		DrawImage(HandIcon2, GraphicWidth / 2 + Sin(yawvalue) * (GraphicWidth / 3) - 32 * HUDScale, GraphicHeight / 2 - Sin(pitchvalue) * (GraphicHeight / 3) - 32 * HUDScale)
 	EndIf
 	
-	If DrawHandIcon Then DrawImage(HandIcon, GraphicWidth / 2 - 32, GraphicHeight / 2 - 32)
+	If DrawHandIcon Then DrawImage(HandIcon, GraphicWidth / 2 - 32 * HUDScale, GraphicHeight / 2 - 32 * HUDScale)
 	For i = 0 To 3
 		If DrawArrowIcon(i) Then
-			x = GraphicWidth / 2 - 32
-			y = GraphicHeight / 2 - 32		
+			x = GraphicWidth / 2 - 32 * HUDScale
+			y = GraphicHeight / 2 - 32 * HUDScale	
 			Select i
 				Case 0
-					y = y - 64 - 5
+					y = y - 64 * HUDScale - 5
 				Case 1
-					x = x + 64 + 5
+					x = x + 64 * HUDScale + 5
 				Case 2
-					y = y + 64 + 5
+					y = y + 64 * HUDScale + 5
 				Case 3
-					x = x - 5 - 64
+					x = x - 5 - 64 * HUDScale
 			End Select
 			DrawImage(HandIcon, x, y)
 			Color 0, 0, 0
-			Rect(x + 4, y + 4, 64 - 8, 64 - 8)
-			DrawImage(ArrowIMG(i), x + 21, y + 21)
+			Rect(x + 4, y + 4, 64 * HUDScale - 8, 64 * HUDScale - 8)
+			DrawImage(ArrowIMG(i), x + 21 * HUDScale, y + 21 * HUDScale)
 			DrawArrowIcon(i) = False
 		End If
 	Next
@@ -4816,44 +4818,36 @@ Function DrawGUI()
 	If HUDenabled Then
 		If SpeedRunMode Then DrawTimer()
 
-		Local width% = 204, height% = 20
-		x% = 80
-		y% = GraphicHeight - 95
-		
-		Color 255, 255, 255	
-		Rect (x, y, width, height, False)
-		For i = 1 To Int(((width - 2) * (BlinkTimer / (BLINKFREQ))) / 10)
-			DrawImage(BlinkMeterIMG, x + 3 + 10 * (i - 1), y + 3)
-		Next	
+		Local width% = 204 * HUDScale
+		x% = 80 * HUDScale
+		y% = GraphicHeight - 95 * HUDScale
+
+		DrawBar(BlinkMeterIMG, x, y, width, BlinkTimer / BLINKFREQ)
 		Color 0, 0, 0
-		Rect(x - 50, y, 30, 30)
+		Rect(x - 50 * HUDScale, y, 30 * HUDScale, 30 * HUDScale)
 		
 		If EyeIrritation > 0 Then
 			Color 200, 0, 0
-			Rect(x - 50 - 3, y - 3, 30 + 6, 30 + 6)
+			Rect(x - 50 * HUDScale - 3, y - 3, 30 * HUDScale + 6, 30 * HUDScale + 6)
 		End If
 		
 		Color 255, 255, 255
-		Rect(x - 50 - 1, y - 1, 30 + 2, 30 + 2, False)
+		Rect(x - 50 * HUDScale - 1, y - 1, 30 * HUDScale + 2, 30 * HUDScale + 2, False)
 		
-		DrawImage BlinkIcon, x - 50, y
+		DrawImage BlinkIcon, x - 50 * HUDScale, y
 		
-		y = GraphicHeight - 55
-		Color 255, 255, 255
-		Rect (x, y, width, height, False)
-		For i = 1 To Int(((width - 2) * (Stamina / 100.0)) / 10)
-			DrawImage(StaminaMeterIMG, x + 3 + 10 * (i - 1), y + 3)
-		Next	
+		y = GraphicHeight - 55 * HUDScale
+		DrawBar(StaminaMeterIMG, x, y, width, Stamina / 100.0)
 		
 		Color 0, 0, 0
-		Rect(x - 50, y, 30, 30)
+		Rect(x - 50 * HUDScale, y, 30 * HUDScale, 30 * HUDScale)
 		
 		Color 255, 255, 255
-		Rect(x - 50 - 1, y - 1, 30 + 2, 30 + 2, False)
+		Rect(x - 50 * HUDScale - 1, y - 1, 30 * HUDScale + 2, 30 * HUDScale + 2, False)
 		If Crouch Then
-			DrawImage CrouchIcon, x - 50, y
+			DrawImage CrouchIcon, x - 50 * HUDScale, y
 		Else
-			DrawImage SprintIcon, x - 50, y
+			DrawImage SprintIcon, x - 50 * HUDScale, y
 		EndIf
 
 		If DebugHUD Then
@@ -5111,9 +5105,9 @@ Function DrawGUI()
 		SelectedDoor = Null
 		Local tempX% = 0
 		
-		width = 70
-		height = 70
-		spacing% = 35
+		width% = 70 * HUDScale
+		height% = 70 * HUDScale
+		spacing% = 35 * HUDScale
 		
 		x = GraphicWidth / 2 - (width * MaxItemAmount /2 + spacing * (MaxItemAmount / 2 - 1)) / 2
 		y = GraphicHeight / 2 - (height * OtherSize /5 + height * (OtherSize / 5 - 1)) / 2;height
@@ -5133,15 +5127,15 @@ Function DrawGUI()
 				Rect(x - 1, y - 1, width + 2, height + 2)
 			EndIf
 			
-			DrawFrame(x, y, width, height, (x Mod 64), (x Mod 64))
+			DrawFrame(x, y, width, height, (x Mod 64 * HUDScale), (x Mod 64 * HUDScale))
 			
 			If OtherOpen = Null Then Exit
 			
 			If OtherOpen\SecondInv[n] <> Null Then
-				If (SelectedItem <> OtherOpen\SecondInv[n] Or isMouseOn) Then DrawImage(OtherOpen\SecondInv[n]\invimg, x + width / 2 - 32, y + height / 2 - 32)
+				If (SelectedItem <> OtherOpen\SecondInv[n] Or isMouseOn) Then DrawImage(OtherOpen\SecondInv[n]\invimg, x + width / 2 - 32 * HUDScale, y + height / 2 - 32 * HUDScale)
 			EndIf
 			If OtherOpen\SecondInv[n] <> Null And SelectedItem <> OtherOpen\SecondInv[n] Then
-			;drawimage(OtherOpen\SecondInv[n].InvIMG, x + width / 2 - 32, y + height / 2 - 32)
+			;drawimage(OtherOpen\SecondInv[n].InvIMG, x + width / 2 - 32 * HUDScale, y + height / 2 - 32 * HUDScale)
 				If isMouseOn Then
 					SetFont Font1
 					Color 0,0,0
@@ -5305,9 +5299,9 @@ Function DrawGUI()
 	Else If InvOpen Then
 		SelectedDoor = Null
 		
-		width% = 70
-		height% = 70
-		spacing% = 35
+		width% = 70 * HUDScale
+		height% = 70 * HUDScale
+		spacing% = 35 * HUDScale
 		
 		x = GraphicWidth / 2 - (width * MaxItemAmount /2 + spacing * (MaxItemAmount / 2 - 1)) / 2
 		y = GraphicHeight / 2 - (height * MaxItemAmount /5 + height * (MaxItemAmount / 5 - 1)) / 2
@@ -5371,16 +5365,16 @@ Function DrawGUI()
 			EndIf
 			
 			Color 255, 255, 255
-			DrawFrame(x, y, width, height, (x Mod 64), (x Mod 64))
+			DrawFrame(x, y, width, height, (x Mod 64 * HUDScale), (x Mod 64 * HUDScale))
 			
 			If Inventory(n) <> Null Then
 				If (SelectedItem <> Inventory(n) Or isMouseOn) Then 
-					DrawImage(Inventory(n)\invimg, x + width / 2 - 32, y + height / 2 - 32)
+					DrawImage(Inventory(n)\invimg, x + width / 2 - 32 * HUDScale, y + height / 2 - 32 * HUDScale)
 				EndIf
 			EndIf
 			
 			If Inventory(n) <> Null And SelectedItem <> Inventory(n) Then
-				;drawimage(Inventory(n).InvIMG, x + width / 2 - 32, y + height / 2 - 32)
+				;drawimage(Inventory(n).InvIMG, x + width / 2 - 32 * HUDScale, y + height / 2 - 32 * HUDScale)
 				If isMouseOn Then
 					If SelectedItem = Null Then
 						If MouseHit1 Then
@@ -5876,14 +5870,7 @@ Function DrawGUI()
 							
 							DrawImage(SelectedItem\itemtemplate\invimg, GraphicWidth / 2 - ImageWidth(SelectedItem\itemtemplate\invimg) / 2, GraphicHeight / 2 - ImageHeight(SelectedItem\itemtemplate\invimg) / 2)
 							
-							width% = 300
-							height% = 20
-							x% = GraphicWidth / 2 - width / 2
-							y% = GraphicHeight / 2 + 80
-							Rect(x, y, width+4, height, False)
-							For  i% = 1 To Int((width - 2) * (SelectedItem\state / 100.0) / 10)
-								DrawImage(BlinkMeterIMG, x + 3 + 10 * (i - 1), y + 3)
-							Next
+							DrawBar(BlinkMeterIMG, GraphicWidth / 2, GraphicHeight / 2 + 80 * HUDScale, 300 * HUDScale, SelectedItem\state / 100.0, True)
 							
 							SelectedItem\state = Min(SelectedItem\state+(FPSfactor/5.0),100)			
 							
@@ -6601,14 +6588,7 @@ Function DrawGUI()
 						
 						DrawImage(SelectedItem\itemtemplate\invimg, GraphicWidth / 2 - ImageWidth(SelectedItem\itemtemplate\invimg) / 2, GraphicHeight / 2 - ImageHeight(SelectedItem\itemtemplate\invimg) / 2)
 						
-						width% = 300
-						height% = 20
-						x% = GraphicWidth / 2 - width / 2
-						y% = GraphicHeight / 2 + 80
-						Rect(x, y, width+4, height, False)
-						For  i% = 1 To Int((width - 2) * (SelectedItem\state / 100.0) / 10)
-							DrawImage(BlinkMeterIMG, x + 3 + 10 * (i - 1), y + 3)
-						Next
+						DrawBar(BlinkMeterIMG, GraphicWidth / 2, GraphicHeight / 2 + 80 * HUDScale, 300 * HUDScale, SelectedItem\state / 100.0, True)
 						
 						SelectedItem\state = Min(SelectedItem\state+(FPSfactor/4.0),100)
 						
@@ -6646,15 +6626,8 @@ Function DrawGUI()
 					
 					DrawImage(SelectedItem\itemtemplate\invimg, GraphicWidth / 2 - ImageWidth(SelectedItem\itemtemplate\invimg) / 2, GraphicHeight / 2 - ImageHeight(SelectedItem\itemtemplate\invimg) / 2)
 					
-					width% = 300
-					height% = 20
-					x% = GraphicWidth / 2 - width / 2
-					y% = GraphicHeight / 2 + 80
-					Rect(x, y, width+4, height, False)
-					For  i% = 1 To Int((width - 2) * (SelectedItem\state / 100.0) / 10)
-						DrawImage(BlinkMeterIMG, x + 3 + 10 * (i - 1), y + 3)
-					Next
-					
+					DrawBar(BlinkMeterIMG, GraphicWidth / 2, GraphicHeight / 2 + 80 * HUDScale, 300 * HUDScale, SelectedItem\state / 100.0, True)
+
 					SelectedItem\state = Min(SelectedItem\state+(FPSfactor/(2.0+(0.5*(SelectedItem\itemtemplate\tempname="finevest")))),100)
 					
 					If SelectedItem\state=100 Then
@@ -6931,14 +6904,7 @@ Function DrawGUI()
 					
 					DrawImage(SelectedItem\itemtemplate\invimg, GraphicWidth / 2 - ImageWidth(SelectedItem\itemtemplate\invimg) / 2, GraphicHeight / 2 - ImageHeight(SelectedItem\itemtemplate\invimg) / 2)
 					
-					width% = 300
-					height% = 20
-					x% = GraphicWidth / 2 - width / 2
-					y% = GraphicHeight / 2 + 80
-					Rect(x, y, width+4, height, False)
-					For  i% = 1 To Int((width - 2) * (SelectedItem\state / 100.0) / 10)
-						DrawImage(BlinkMeterIMG, x + 3 + 10 * (i - 1), y + 3)
-					Next
+					DrawBar(BlinkMeterIMG, GraphicWidth / 2, GraphicHeight / 2 + 80 * HUDScale, 300 * HUDScale, SelectedItem\state / 100.0, True)
 					
 					SelectedItem\state = Min(SelectedItem\state+(FPSfactor),100)
 					
@@ -7212,10 +7178,10 @@ Function DrawTimer()
 	Else
 		durText$ = "Pre-made save loaded"
 	EndIf
-	Local x% = GraphicWidth - StringWidth(durText) - 24
-	Local y% = 24
+	Local x% = GraphicWidth - StringWidth(durText) - 24 * HUDScale
+	Local y% = 24 * HUDScale
 	Color 0, 0, 0
-	Text(x + 3 * MenuScale, y + 3 * MenuScale, durText)
+	Text(x + 3 * HUDScale, y + 3 * HUDScale, durText)
 	If TimerStopped Then
 		Color 255, 0, 0
 	Else
@@ -8001,12 +7967,18 @@ Function LoadEntities()
 	ScaleImage PauseMenuIMG,MenuScale,MenuScale
 	
 	SprintIcon% = LoadImage_Strict("GFX\sprinticon.png")
+	ScaleImage(SprintIcon, HUDScale, HUDScale)
 	BlinkIcon% = LoadImage_Strict("GFX\blinkicon.png")
+	ScaleImage(BlinkIcon, HUDScale, HUDScale)
 	CrouchIcon% = LoadImage_Strict("GFX\sneakicon.png")
+	ScaleImage(CrouchIcon, HUDScale, HUDScale)
 	HandIcon% = LoadImage_Strict("GFX\handsymbol.png")
+	ScaleImage(HandIcon, HUDScale, HUDScale)
 	HandIcon2% = LoadImage_Strict("GFX\handsymbol2.png")
+	ScaleImage(HandIcon2, HUDScale, HUDScale)
 
 	StaminaMeterIMG% = LoadImage_Strict("GFX\staminameter.jpg")
+	ScaleImage(StaminaMeterIMG, HUDScale, HUDScale)
 
 	KeypadHUD =  LoadImage_Strict("GFX\keypadhud.jpg")
 	MaskImage(KeypadHUD, 255,0,255)

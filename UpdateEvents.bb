@@ -7631,6 +7631,8 @@ Function UpdateEvents()
 						Case 3
 							e\EventState2 = e\EventState2 + FPSfactor
 							
+							CanSave = False
+
 							BlurTimer = e\EventState2*2.0
 							
 							If (e\EventState2>250.0 And e\EventState2-FPSfactor <= 250.0) Then

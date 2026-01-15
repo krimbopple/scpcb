@@ -7029,6 +7029,9 @@ End Function
 Function CreateMap()
 	DebugLog ("Generating a map using the seed "+GetRandomSeed())
 	
+	MapWidth% = GetModdedINIInt(MapOptions, "facility", "width")
+	MapHeight% = GetModdedINIInt(MapOptions, "facility", "height")
+
 	I_Zone\Transition[0] = Floor(MapHeight * (2.0 / 3.0)) + 1
 	I_Zone\Transition[1] = Floor(MapHeight * (1.0 / 3.0)) + 1
 	I_Zone\HasCustomForest = False
@@ -7041,9 +7044,6 @@ Function CreateMap()
 	Local zone%
 	
 	SeedRnd GetRandomSeed()
-	
-	MapWidth% = GetModdedINIInt(MapOptions, "facility", "width")
-	MapHeight% = GetModdedINIInt(MapOptions, "facility", "height")
 	
 	Dim MapTemp%(MapWidth+1, MapHeight+1)
 	Dim MapFound%(MapWidth+1, MapHeight+1)

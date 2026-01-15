@@ -7408,8 +7408,14 @@ Function CreateMap()
 	
 	For rt.RoomTemplates = Each RoomTemplates
 		If rt\SetRoom >= 0 Then
-			Local start% = MinPositions(rt\Shape, rt\zone[0])
-			SetRoom(rt\Name, rt\Shape, start+Floor(rt\SetRoom*Float(RoomAmounts(rt\Shape, rt\zone[0]))),start,MaxPositions(rt\Shape, rt\zone[0]))
+			For i% = 0 To ZONEAMOUNT-1
+				zone% = rt\zone[i]
+				If zone <> 0 Then
+					Local start% = MinPositions(rt\Shape, zone)
+					SetRoom(rt\Name, rt\Shape, start+Floor(rt\SetRoom*Float(RoomAmounts(rt\Shape, zone))),start,MaxPositions(rt\Shape, zone))
+				EndIf
+			Next
+
 		EndIf
 	Next
 

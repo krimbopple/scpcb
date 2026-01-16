@@ -652,16 +652,6 @@ Function UpdateMainMenu()
 					
 					y=y+20*MenuScale
 					
-					Color 255,255,255				
-					Text(x + 20 * MenuScale, y, "Enable bump mapping:")	
-					BumpEnabled = DrawTick(x + 310 * MenuScale, y + MenuScale, BumpEnabled)
-					If MouseOn(x + 310 * MenuScale, y + MenuScale, 20*MenuScale,20*MenuScale) And OnSliderID=0
-						;DrawTooltip("Not available in this version")
-						DrawOptionsTooltip(tx,ty,tw,th,"bump")
-					EndIf
-					
-					y=y+30*MenuScale
-					
 					Color 255,255,255
 					Text(x + 20 * MenuScale, y, "VSync:")
 					Vsync% = DrawTick(x + 310 * MenuScale, y + MenuScale, Vsync%)
@@ -679,15 +669,6 @@ Function UpdateMainMenu()
 						DrawOptionsTooltip(tx,ty,tw,th,"antialias")
 					EndIf
 					
-					y=y+30*MenuScale ;40
-					
-					Color 255,255,255
-					Text(x + 20 * MenuScale, y, "Enable room lights:")
-					EnableRoomLights = DrawTick(x + 310 * MenuScale, y + MenuScale, EnableRoomLights)
-					If MouseOn(x+310*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
-						DrawOptionsTooltip(tx,ty,tw,th,"roomlights")
-					EndIf
-					
 					y=y+30*MenuScale
 					
 					;Local prevGamma# = ScreenGamma
@@ -697,16 +678,7 @@ Function UpdateMainMenu()
 					If (MouseOn(x+310*MenuScale,y+6*MenuScale,150*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=1
 						DrawOptionsTooltip(tx,ty,tw,th,"gamma",ScreenGamma)
 					EndIf
-					
-					y=y+50*MenuScale
-					
-					Color 255,255,255
-					Text(x + 20 * MenuScale, y, "Particle amount:")
-					ParticleAmount = Slider3(x+310*MenuScale,y+6*MenuScale,150*MenuScale,ParticleAmount,2,"MINIMAL","REDUCED","FULL")
-					If (MouseOn(x + 310 * MenuScale, y-6*MenuScale, 150*MenuScale+14, 20) And OnSliderID=0) Or OnSliderID=2
-						DrawOptionsTooltip(tx,ty,tw,th,"particleamount",ParticleAmount)
-					EndIf
-					
+
 					y=y+50*MenuScale
 					
 					Color 255,255,255
@@ -2449,10 +2421,6 @@ Function DrawOptionsTooltip(x%,y%,width%,height%,option$,value#=0,ingame%=False)
 	Select Lower(option$)
 		;Graphic options
 			;[Block]
-		Case "bump"
-			txt = Chr(34)+"Bump mapping"+Chr(34)+" is used to simulate bumps and dents by distorting the lightmaps."
-			txt2 = "This option cannot be changed in-game."
-			R = 255
 		Case "vsync"
 			txt = Chr(34)+"Vertical sync"+Chr(34)+" waits for the display to finish its current refresh cycle before calculating the next frame, preventing issues such as "
 			txt = txt + "screen tearing. This ties the game's frame rate to your display's refresh rate and may cause some input lag."
@@ -2460,8 +2428,6 @@ Function DrawOptionsTooltip(x%,y%,width%,height%,option$,value#=0,ingame%=False)
 			txt = Chr(34)+"Anti-Aliasing"+Chr(34)+" is used to smooth the rendered image before displaying in order to reduce aliasing around the edges of models."
 			txt2 = "This option only takes effect in fullscreen."
 			R = 255
-		Case "roomlights"
-			txt = "Toggles the artificial lens flare effect generated over specific light sources."
 		Case "gamma"
 			txt = Chr(34)+"Gamma correction"+Chr(34)+" is used to achieve a good brightness factor to balance out your display's gamma if the game appears either too dark or bright. "
 			txt = txt + "Setting it too high or low can cause the graphics to look less detailed."
@@ -2471,20 +2437,6 @@ Function DrawOptionsTooltip(x%,y%,width%,height%,option$,value#=0,ingame%=False)
 			txt2 = "Current value: "+Int(value*100)+"% (default is 100%)"
 		Case "texquality"
 			txt = Chr(34)+"Texture LOD Bias"+Chr(34)+" affects the distance at which texture detail will change to prevent aliasing. Change this option if textures flicker or look too blurry."
-		Case "particleamount"
-			txt = "Determines the amount of particles that can be rendered per tick."
-			Select value
-				Case 0
-					R = 255
-					txt2 = "Only smoke emitters will produce particles."
-				Case 1
-					R = 255
-					G = 255
-					txt2 = "Only a few particles will be rendered per tick."
-				Case 2
-					G = 255
-					txt2 = "All particles are rendered."
-			End Select
 		Case "vram"
 			txt = "Textures that are stored in the Video-RAM will load faster, but this also has negative effects on the texture quality as well."
 			txt2 = "This option cannot be changed in-game."

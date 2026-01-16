@@ -7390,15 +7390,6 @@ Function DrawMenu()
 					;[Block]
 					y=y+50*MenuScale
 					
-					Color 100,100,100
-					Text(x, y, "Enable bump mapping:")	
-					BumpEnabled = DrawTick(x + 270 * MenuScale, y + MenuScale, BumpEnabled, True)
-					If MouseOn(x + 270 * MenuScale, y + MenuScale, 20*MenuScale,20*MenuScale) And OnSliderID=0
-						DrawOptionsTooltip(tx,ty,tw,th,"bump")
-					EndIf
-					
-					y=y+30*MenuScale
-					
 					Color 255,255,255
 					Text(x, y, "VSync:")
 					Vsync% = DrawTick(x + 270 * MenuScale, y + MenuScale, Vsync%)
@@ -7417,31 +7408,11 @@ Function DrawMenu()
 					
 					y=y+30*MenuScale
 					
-					Color 255,255,255
-					Text(x, y, "Enable room lights:")
-					EnableRoomLights = DrawTick(x + 270 * MenuScale, y + MenuScale, EnableRoomLights)
-					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
-						DrawOptionsTooltip(tx,ty,tw,th,"roomlights")
-					EndIf
-					
-					y=y+30*MenuScale
-					
 					ScreenGamma = (SlideBar(x + 270*MenuScale, y+6*MenuScale, 100*MenuScale, ScreenGamma*50.0, 1)/50.0)
 					Color 255,255,255
 					Text(x, y, "Screen gamma")
 					If (MouseOn(x+270*MenuScale,y+6*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=1
 						DrawOptionsTooltip(tx,ty,tw,th,"gamma",ScreenGamma)
-					EndIf
-					
-					;y = y + 50*MenuScale
-					
-					y=y+50*MenuScale
-					
-					Color 255,255,255
-					Text(x, y, "Particle amount:")
-					ParticleAmount = Slider3(x+270*MenuScale,y+6*MenuScale,100*MenuScale,ParticleAmount,2,"MINIMAL","REDUCED","FULL")
-					If (MouseOn(x + 270 * MenuScale, y-6*MenuScale, 100*MenuScale+14, 20) And OnSliderID=0) Or OnSliderID=2
-						DrawOptionsTooltip(tx,ty,tw,th,"particleamount",ParticleAmount)
 					EndIf
 					
 					y=y+50*MenuScale
@@ -11284,7 +11255,6 @@ Function SaveOptionsINI()
 	
 	PutINIValue(OptionFile, "options", "mouse sensitivity", MouseSens)
 	PutINIValue(OptionFile, "options", "invert mouse y", InvertMouse)
-	PutINIValue(OptionFile, "options", "bump mapping enabled", BumpEnabled)			
 	PutINIValue(OptionFile, "options", "HUD enabled", HUDenabled)
 	PutINIValue(OptionFile, "options", "screengamma", ScreenGamma)
 	PutINIValue(OptionFile, "options", "antialias", Opt_AntiAlias)
@@ -11293,13 +11263,11 @@ Function SaveOptionsINI()
 	PutINIValue(OptionFile, "options", "framelimit", Framelimit%)
 	PutINIValue(OptionFile, "options", "achievement popup enabled", AchvMSGenabled%)
 	PutINIValue(OptionFile, "launcher", "launcher enabled", LauncherEnabled%)
-	PutINIValue(OptionFile, "options", "room lights enabled", EnableRoomLights%)
 	PutINIValue(OptionFile, "options", "texture details", TextureDetails%)
 	PutINIValue(OptionFile, "console", "enabled", CanOpenConsole%)
 	PutINIValue(OptionFile, "console", "auto opening", ConsoleOpening%)
 	PutINIValue(OptionFile, "options", "speed run mode", SpeedRunMode%)
 	PutINIValue(OptionFile, "options", "numeric seeds", UseNumericSeeds%)
-	PutINIValue(OptionFile, "options", "particle amount", ParticleAmount)
 	PutINIValue(OptionFile, "options", "enable vram", EnableVRam)
 	PutINIValue(OptionFile, "options", "mouse smoothing", MouseSmooth)
 	PutINIValue(OptionFile, "options", "fov", FOV)

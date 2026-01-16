@@ -10027,11 +10027,11 @@ Function Use914(item.Items, setting$, x#, y#, z#)
 					d.Decals = CreateDecal(0, x, 8*RoomScale+0.010, z, 90, Rand(360), 0)
 					d\Size = 0.2 : EntityAlpha(d\obj, 0.8) : ScaleSprite(d\obj, d\Size, d\Size)
 				Case "1:1"
-					it2 = CreateItem("Cigarette", "cigarette", x + 1.5, y + 0.5, z + 1.0)
+					it2 = CreateItem("Cigarette", "cigarette", x, y, z)
 				Case "fine"
-					it2 = CreateItem("Joint", "420s", x + 1.5, y + 0.5, z + 1.0)
+					it2 = CreateItem("Joint", "420s", x, y, z)
 				Case "very fine"
-					it2 = CreateItem("Smelly Joint", "420s", x + 1.5, y + 0.5, z + 1.0)
+					it2 = CreateItem("Smelly Joint", "420s", x, y, z)
 			End Select
 			
 			RemoveItem(item)

@@ -2011,6 +2011,12 @@ Function UpdateNPCs()
 							ElseIf dist > HideDistance*0.8 And n\State3 > 0 Then
 								n\State = 2
 								n\State3 = 0
+								n\PathStatus = 0
+								n\PathTimer = 0.0
+								n\PathLocation = 0
+								n\State2 = 0
+								n\PrevState = 0
+								
 								For r.Rooms = Each Rooms
 									If EntityDistance(r\obj,n\Collider)<4.0 Then
 										TeleportEntity(n\Collider,EntityX(r\obj),0.1,EntityZ(r\obj),n\CollRadius,True)

@@ -3202,10 +3202,7 @@ While IsRunning
 				darkA = Max(darkA, Min(Abs(FallTimer / 400.0), 1.0))				
 			EndIf
 			
-			If SelectedItem <> Null Then
-				If SelectedItem\itemtemplate\tempname = "navigator" Or SelectedItem\itemtemplate\tempname = "nav" Then darkA = Max(darkA, 0.5)
-			End If
-			If SelectedScreen <> Null Then darkA = Max(darkA, 0.5)
+			If SelectedScreen <> Null Lor (Not InvOpen) And SelectedItem <> Null And (SelectedItem\itemtemplate\tempname = "navigator" Lor SelectedItem\itemtemplate\tempname = "nav") Then darkA = Max(darkA, 0.5)
 			
 			EntityAlpha(Dark, darkA)	
 		EndIf
@@ -7164,8 +7161,6 @@ Function DrawGUI()
 			EndIf
 			
 			If MouseHit2 Then
-				EntityAlpha Dark, 0.0
-				
 				IN$ = SelectedItem\itemtemplate\tempname
 				If IN$ = "scp1025" Then
 					If SelectedItem\itemtemplate\img<>0 Then FreeImage(SelectedItem\itemtemplate\img)

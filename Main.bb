@@ -65,7 +65,7 @@ Include "Blitz_File_FileName.bb"
 
 Include "DevilParticleSystem.bb"
 
-Global SteamActive% = GetOptionInt("options", "enable steam")
+Global SteamActive% = GetOptionInt("general", "enable steam")
 If SteamActive Then
 	If Steam_Init() <> 0 Then RuntimeErrorExt("Steam failed to initialize")
 EndIf
@@ -91,7 +91,7 @@ Global CanOpenConsole% = GetOptionInt("console", "enabled")
 
 Global DebugResourcePacks% = GetOptionInt("debug", "resource pack strict load")
 
-Global UseNumericSeeds% = GetOptionInt("options", "numeric seeds")
+Global UseNumericSeeds% = GetOptionInt("general", "numeric seeds")
 
 Dim ArrowIMG(4)
 
@@ -101,29 +101,29 @@ Global LauncherWidth%= Min(GetOptionInt("launcher", "launcher width"), 1024)
 Global LauncherHeight% = Min(GetOptionInt("launcher", "launcher height"), 768)
 Global LauncherEnabled% = GetOptionInt("launcher", "launcher enabled")
 
-Global GraphicWidth% = GetOptionInt("options", "width"), GraphicHeight% = GetOptionInt("options", "height")
+Global GraphicWidth% = GetOptionInt("graphics", "width"), GraphicHeight% = GetOptionInt("graphics", "height")
 If GraphicWidth <= 0 Then GraphicWidth = DesktopWidth()
 If GraphicHeight <= 0 Then GraphicHeight = DesktopHeight()
 
-Global Depth% = 0, Fullscreen% = GetOptionInt("options", "fullscreen")
+Global Depth% = 0, Fullscreen% = GetOptionInt("graphics", "fullscreen")
 
-Global SelectedGFXDriver% = Min(Max(GetOptionInt("options", "gfx driver"), 1), CountGfxDrivers())
+Global SelectedGFXDriver% = Min(Max(GetOptionInt("graphics", "gfx driver"), 1), CountGfxDrivers())
 
 Global fresize_image%, fresize_texture%, fresize_texture2%
 Global fresize_cam%
 
-Global ShowFPS = GetOptionInt("options", "show FPS")
+Global ShowFPS = GetOptionInt("graphics", "show FPS")
 
 Global WireframeState
 Global HalloweenTex
 
-Global BorderlessWindowed% = GetOptionInt("options", "borderless windowed")
+Global BorderlessWindowed% = GetOptionInt("graphics", "borderless windowed")
 Global RealGraphicWidth%,RealGraphicHeight%
 Global AspectRatioRatio#
 
-Global EnableRoomLights% = GetOptionInt("options", "room lights enabled")
+Global EnableRoomLights% = GetOptionInt("graphics", "room lights enabled")
 
-Global TextureDetails% = GetOptionInt("options", "texture details")
+Global TextureDetails% = GetOptionInt("graphics", "texture details")
 Global TextureFloat#
 Select TextureDetails%
 	Case 0
@@ -140,7 +140,7 @@ End Select
 Global ConsoleOpening% = GetOptionInt("console", "auto opening")
 Global SFXVolume# = GetOptionFloat("audio", "sound volume")
 
-Global Bit16Mode = GetOptionInt("options", "16bit")
+Global Bit16Mode = GetOptionInt("graphics", "16bit")
 
 If LauncherEnabled And (Not IsRestart) Then 
 	AspectRatioRatio = 1.0
@@ -183,18 +183,35 @@ SetBuffer(BackBuffer())
 Global CurTime%, PrevTime%, LoopDelay%, FPSfactor#, FPSfactor2#, PrevFPSFactor#
 Local CheckFPS%, ElapsedLoops%, FPS%
 
-Global Framelimit% = GetOptionInt("options", "framelimit")
-Global Vsync% = GetOptionInt("options", "vsync")
+Global Framelimit% = GetOptionInt("graphics", "framelimit")
+Global Vsync% = GetOptionInt("graphics", "vsync")
 
-Global Opt_AntiAlias = GetOptionInt("options", "antialias")
+Global Opt_AntiAlias = GetOptionInt("graphics", "antialias")
 
 Global CurrFrameLimit# = (Framelimit%-19)/100.0
 
-Global ScreenGamma# = GetOptionFloat("options", "screengamma")
+Global ScreenGamma# = GetOptionFloat("graphics", "screengamma")
 ;If Fullscreen Then UpdateScreenGamma()
 
-Global FOV% = GetOptionInt("options", "fov")
+Global FOV% = GetOptionInt("graphics", "fov")
 Const DEFAULT_FOV% = 59
+
+Global HUDStartX%, HUDEndX%, HUDStartY%, HUDEndY%
+Global HUDOffsetScale# = GetOptionFloat("graphics", "hud offset")
+
+UpdateHUDOffsets()
+
+Function UpdateHUDOffsets()
+	If GraphicWidth > GraphicHeight Then
+		HUDStartY = 0 : HUDEndY = GraphicHeight
+		HUDStartX = Int(HUDOffsetScale * GraphicWidth / 2)
+		HUDEndX = GraphicWidth - HUDStartX
+	Else
+		HUDStartX = 0 : HUDEndX = GraphicWidth
+		HUDStartY = Int(HUDOffsetScale * GraphicHeight / 2)
+		HUDEndY = GraphicHeight - HUDStartY
+	EndIf
+End Function
 
 Const HIT_MAP% = 1, HIT_PLAYER% = 2, HIT_ITEM% = 3, HIT_APACHE% = 4, HIT_178% = 5, HIT_DEAD% = 6
 SeedRnd MilliSecs()
@@ -248,7 +265,7 @@ Global mouselook_x_inc# = 0.3 ; This sets both the sensitivity and direction (+/
 Global mouselook_y_inc# = 0.3 ; This sets both the sensitivity and direction (+/-) of the mouse on the Y axis.
 Global mouse_x_speed_1#, mouse_y_speed_1#
 
-Global MoveInputCancelling% = GetOptionInt("options", "move input cancelling")
+Global MoveInputCancelling% = GetOptionInt("general", "move input cancelling")
 
 Global KEY_RIGHT = GetOptionInt("binds", "Right key")
 Global KEY_LEFT = GetOptionInt("binds", "Left key")
@@ -262,7 +279,7 @@ Global KEY_CROUCH = GetOptionInt("binds", "Crouch key")
 Global KEY_SAVE = GetOptionInt("binds", "Save key")
 Global KEY_CONSOLE = GetOptionInt("binds", "Console key")
 
-Global MouseSmooth# = GetOptionFloat("options", "mouse smoothing")
+Global MouseSmooth# = GetOptionFloat("controls", "mouse smoothing")
 
 Global Mesh_MinX#, Mesh_MinY#, Mesh_MinZ#
 Global Mesh_MaxX#, Mesh_MaxY#, Mesh_MaxZ#
@@ -306,7 +323,7 @@ Global PlayerZone%, PlayerRoom.Rooms
 
 Global GrabbedEntity%
 
-Global InvertMouse% = GetOptionInt("options", "invert mouse y")
+Global InvertMouse% = GetOptionInt("controls", "invert mouse y")
 Global MouseHit1%, MouseDown1%, MouseHit2%, DoubleClick%, LastMouseHit1%, LastMouseHit1X%, LastMouseHit1Y%, MouseUp1%
 
 Global GodMode%, NoClip%, NoClipSpeed# = 2.0
@@ -352,7 +369,7 @@ Dim RadioCHN%(8)
 
 Dim OldAiPics%(5)
 
-Global SpeedRunMode% = GetOptionInt("options", "speed run mode")
+Global SpeedRunMode% = GetOptionInt("general", "speed run mode")
 Global PlayTime%, TimerStopped% = True
 Global ConsoleFlush%
 Global ConsoleFlushSnd% = 0, ConsoleMusFlush% = 0, ConsoleMusPlay% = 0
@@ -1601,8 +1618,8 @@ Global BlurVolume#, BlurTimer#
 
 Global LightBlink#, LightFlash#
 
-Global BumpEnabled% = GetOptionInt("options", "bump mapping enabled")
-Global HUDenabled% = GetOptionInt("options", "HUD enabled")
+Global BumpEnabled% = GetOptionInt("graphics", "bump mapping enabled")
+Global HUDenabled% = GetOptionInt("graphics", "HUD enabled")
 
 Global Camera%, CameraShake#, CurrCameraZoom#
 
@@ -1612,9 +1629,9 @@ Global CameraFogFar# = GetModdedINIFloat(MapOptions, "facility", "camera fog far
 
 Global StoredCameraFogFar# = CameraFogFar
 
-Global MouseSens# = GetOptionFloat("options", "mouse sensitivity")
+Global MouseSens# = GetOptionFloat("controls", "mouse sensitivity")
 
-Global EnableVRam% = GetOptionInt("options", "enable vram")
+Global EnableVRam% = GetOptionInt("graphics", "enable vram")
 
 Include "dreamfilter.bb"
 
@@ -1841,7 +1858,7 @@ Global room2gw_z# = 0.0
 
 Global menuroomscale# = 8.0 / 2048.0
 
-Global ParticleAmount% = GetOptionInt("options","particle amount")
+Global ParticleAmount% = GetOptionInt("graphics","particle amount")
 
 Dim NavImages(5)
 For i = 0 To 3
@@ -3185,10 +3202,7 @@ While IsRunning
 				darkA = Max(darkA, Min(Abs(FallTimer / 400.0), 1.0))				
 			EndIf
 			
-			If SelectedItem <> Null Then
-				If SelectedItem\itemtemplate\tempname = "navigator" Or SelectedItem\itemtemplate\tempname = "nav" Then darkA = Max(darkA, 0.5)
-			End If
-			If SelectedScreen <> Null Then darkA = Max(darkA, 0.5)
+			If SelectedScreen <> Null Lor (Not InvOpen) And SelectedItem <> Null And (SelectedItem\itemtemplate\tempname = "navigator" Lor SelectedItem\itemtemplate\tempname = "nav") Then darkA = Max(darkA, 0.5)
 			
 			EntityAlpha(Dark, darkA)	
 		EndIf
@@ -4851,8 +4865,8 @@ Function DrawGUI()
 		If SpeedRunMode Then DrawTimer()
 
 		Local width% = 204 * HUDScale
-		x% = 80 * HUDScale
-		y% = GraphicHeight - 95 * HUDScale
+		x% = HUDStartX + 80 * HUDScale
+		y% = HUDEndY - 95 * HUDScale
 
 		DrawBar(BlinkMeterIMG, x, y, width, BlinkTimer / BLINKFREQ)
 		Color 0, 0, 0
@@ -4868,7 +4882,7 @@ Function DrawGUI()
 		
 		DrawImage BlinkIcon, x - 50 * HUDScale, y
 		
-		y = GraphicHeight - 55 * HUDScale
+		y = HUDEndY - 55 * HUDScale
 		DrawBar(StaminaMeterIMG, x, y, width, Stamina / 100.0)
 		
 		Color 0, 0, 0
@@ -6238,8 +6252,8 @@ Function DrawGUI()
 					
 					strtemp$ = ""
 					
-					x = GraphicWidth - ImageWidth(SelectedItem\itemtemplate\img) ;+ 120
-					y = GraphicHeight - ImageHeight(SelectedItem\itemtemplate\img) ;- 30
+					x = HUDEndX - ImageWidth(SelectedItem\itemtemplate\img) ;+ 120
+					y = HUDEndY - ImageHeight(SelectedItem\itemtemplate\img) ;- 30
 					
 					DrawImage(SelectedItem\itemtemplate\img, x, y)
 					
@@ -6722,8 +6736,8 @@ Function DrawGUI()
 					
 					If SelectedItem\state <= 100 Then SelectedItem\state = Max(0, SelectedItem\state - FPSfactor * 0.005)
 					
-					x = GraphicWidth - ImageWidth(SelectedItem\itemtemplate\img)*0.5+20
-					y = GraphicHeight - ImageHeight(SelectedItem\itemtemplate\img)*0.4-85
+					x = HUDEndX - ImageWidth(SelectedItem\itemtemplate\img)*0.5+20
+					y = HUDEndY - ImageHeight(SelectedItem\itemtemplate\img)*0.4-85
 					width = 287
 					height = 256
 					
@@ -7147,8 +7161,6 @@ Function DrawGUI()
 			EndIf
 			
 			If MouseHit2 Then
-				EntityAlpha Dark, 0.0
-				
 				IN$ = SelectedItem\itemtemplate\tempname
 				If IN$ = "scp1025" Then
 					If SelectedItem\itemtemplate\img<>0 Then FreeImage(SelectedItem\itemtemplate\img)
@@ -7210,8 +7222,8 @@ Function DrawTimer()
 	Else
 		durText$ = "Pre-made save loaded"
 	EndIf
-	Local x% = GraphicWidth - StringWidth(durText) - 24 * HUDScale
-	Local y% = 24 * HUDScale
+	Local x% = HUDEndX - StringWidth(durText) - 24 * HUDScale
+	Local y% = HUDStartY + 24 * HUDScale
 	Color 0, 0, 0
 	Text(x + 3 * HUDScale, y + 3 * HUDScale, durText)
 	If TimerStopped Then
@@ -7390,15 +7402,6 @@ Function DrawMenu()
 					;[Block]
 					y=y+50*MenuScale
 					
-					Color 100,100,100
-					Text(x, y, "Enable bump mapping:")	
-					BumpEnabled = DrawTick(x + 270 * MenuScale, y + MenuScale, BumpEnabled, True)
-					If MouseOn(x + 270 * MenuScale, y + MenuScale, 20*MenuScale,20*MenuScale) And OnSliderID=0
-						DrawOptionsTooltip(tx,ty,tw,th,"bump")
-					EndIf
-					
-					y=y+30*MenuScale
-					
 					Color 255,255,255
 					Text(x, y, "VSync:")
 					Vsync% = DrawTick(x + 270 * MenuScale, y + MenuScale, Vsync%)
@@ -7417,31 +7420,11 @@ Function DrawMenu()
 					
 					y=y+30*MenuScale
 					
-					Color 255,255,255
-					Text(x, y, "Enable room lights:")
-					EnableRoomLights = DrawTick(x + 270 * MenuScale, y + MenuScale, EnableRoomLights)
-					If MouseOn(x+270*MenuScale,y+MenuScale,20*MenuScale,20*MenuScale) And OnSliderID=0
-						DrawOptionsTooltip(tx,ty,tw,th,"roomlights")
-					EndIf
-					
-					y=y+30*MenuScale
-					
 					ScreenGamma = (SlideBar(x + 270*MenuScale, y+6*MenuScale, 100*MenuScale, ScreenGamma*50.0, 1)/50.0)
 					Color 255,255,255
-					Text(x, y, "Screen gamma")
+					Text(x, y, "Screen gamma:")
 					If (MouseOn(x+270*MenuScale,y+6*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=1
 						DrawOptionsTooltip(tx,ty,tw,th,"gamma",ScreenGamma)
-					EndIf
-					
-					;y = y + 50*MenuScale
-					
-					y=y+50*MenuScale
-					
-					Color 255,255,255
-					Text(x, y, "Particle amount:")
-					ParticleAmount = Slider3(x+270*MenuScale,y+6*MenuScale,100*MenuScale,ParticleAmount,2,"MINIMAL","REDUCED","FULL")
-					If (MouseOn(x + 270 * MenuScale, y-6*MenuScale, 100*MenuScale+14, 20) And OnSliderID=0) Or OnSliderID=2
-						DrawOptionsTooltip(tx,ty,tw,th,"particleamount",ParticleAmount)
 					EndIf
 					
 					y=y+50*MenuScale
@@ -7473,6 +7456,16 @@ Function DrawMenu()
 					If MouseOn(x + 270 * MenuScale, y + MenuScale, 20*MenuScale,20*MenuScale) And OnSliderID=0
 						DrawOptionsTooltip(tx,ty,tw,th,"vram")
 					EndIf
+
+					y=y+50*MenuScale
+
+					HUDOffsetScale = SlideBar(x + 270*MenuScale, y+6*MenuScale,100*MenuScale, HUDOffsetScale*100, 5)/100
+					Color 255,255,255
+					Text(x, y, "HUD offset:")
+					If (MouseOn(x+270*MenuScale,y+6*MenuScale,100*MenuScale+14,20) And OnSliderID=0) Lor OnSliderID=5
+						DrawOptionsTooltip(tx,ty,tw,th,"hudoffset")
+					EndIf
+					UpdateHUDOffsets()
 
 					y=y+50*MenuScale
 
@@ -11282,27 +11275,25 @@ End Function
 ;Save options to .ini.
 Function SaveOptionsINI()
 	
-	PutINIValue(OptionFile, "options", "mouse sensitivity", MouseSens)
-	PutINIValue(OptionFile, "options", "invert mouse y", InvertMouse)
-	PutINIValue(OptionFile, "options", "bump mapping enabled", BumpEnabled)			
-	PutINIValue(OptionFile, "options", "HUD enabled", HUDenabled)
-	PutINIValue(OptionFile, "options", "screengamma", ScreenGamma)
-	PutINIValue(OptionFile, "options", "antialias", Opt_AntiAlias)
-	PutINIValue(OptionFile, "options", "vsync", Vsync)
-	PutINIValue(OptionFile, "options", "show FPS", ShowFPS)
-	PutINIValue(OptionFile, "options", "framelimit", Framelimit%)
-	PutINIValue(OptionFile, "options", "achievement popup enabled", AchvMSGenabled%)
+	PutINIValue(OptionFile, "controls", "mouse sensitivity", MouseSens)
+	PutINIValue(OptionFile, "controls", "invert mouse y", InvertMouse)
+	PutINIValue(OptionFile, "graphics", "HUD enabled", HUDenabled)
+	PutINIValue(OptionFile, "graphics", "screengamma", ScreenGamma)
+	PutINIValue(OptionFile, "graphics", "antialias", Opt_AntiAlias)
+	PutINIValue(OptionFile, "graphics", "vsync", Vsync)
+	PutINIValue(OptionFile, "graphics", "show FPS", ShowFPS)
+	PutINIValue(OptionFile, "graphics", "framelimit", Framelimit%)
+	PutINIValue(OptionFile, "general", "achievement popup enabled", AchvMSGenabled%)
 	PutINIValue(OptionFile, "launcher", "launcher enabled", LauncherEnabled%)
-	PutINIValue(OptionFile, "options", "room lights enabled", EnableRoomLights%)
-	PutINIValue(OptionFile, "options", "texture details", TextureDetails%)
+	PutINIValue(OptionFile, "graphics", "texture details", TextureDetails%)
 	PutINIValue(OptionFile, "console", "enabled", CanOpenConsole%)
 	PutINIValue(OptionFile, "console", "auto opening", ConsoleOpening%)
-	PutINIValue(OptionFile, "options", "speed run mode", SpeedRunMode%)
-	PutINIValue(OptionFile, "options", "numeric seeds", UseNumericSeeds%)
-	PutINIValue(OptionFile, "options", "particle amount", ParticleAmount)
-	PutINIValue(OptionFile, "options", "enable vram", EnableVRam)
-	PutINIValue(OptionFile, "options", "mouse smoothing", MouseSmooth)
-	PutINIValue(OptionFile, "options", "fov", FOV)
+	PutINIValue(OptionFile, "general", "speed run mode", SpeedRunMode%)
+	PutINIValue(OptionFile, "general", "numeric seeds", UseNumericSeeds%)
+	PutINIValue(OptionFile, "graphics", "enable vram", EnableVRam)
+	PutINIValue(OptionFile, "controls", "mouse smoothing", MouseSmooth)
+	PutINIValue(OptionFile, "graphics", "hud offset", HUDOffsetScale)
+	PutINIValue(OptionFile, "graphics", "fov", FOV)
 	
 	PutINIValue(OptionFile, "audio", "music volume", MusicVolume)
 	PutINIValue(OptionFile, "audio", "sound volume", PrevSFXVolume)
@@ -11398,8 +11389,8 @@ Function Graphics3DExt%(width%,height%,depth%=32,mode%=2)
 	Graphics3D width,height,depth,mode
 	InitFastResize()
 	;InitExt()
-	AntiAlias GetOptionInt("options","antialias")
-	;TextureAnisotropy% (GetOptionInt("options","anisotropy"),-1)
+	AntiAlias GetOptionInt("graphics","antialias")
+	;TextureAnisotropy% (GetOptionInt("graphics","anisotropy"),-1)
 End Function
 
 Function ResizeImage2(image%,width%,height%)
@@ -11497,10 +11488,10 @@ Function RenderWorld2()
 			Local plusY% = 0
 			If hasBattery=1 Then plusY% = 40
 			
-			Text GraphicWidth/2,(20+plusY)*MenuScale,"REFRESHING DATA IN",True,False
+			Text GraphicWidth/2,HUDStartY+(20+plusY)*MenuScale,"REFRESHING DATA IN",True,False
 			
-			Text GraphicWidth/2,(60+plusY)*MenuScale,Max(f2s(NVTimer/60.0,1),0.0),True,False
-			Text GraphicWidth/2,(100+plusY)*MenuScale,"SECONDS",True,False
+			Text GraphicWidth/2,HUDStartY+(60+plusY)*MenuScale,Max(f2s(NVTimer/60.0,1),0.0),True,False
+			Text GraphicWidth/2,HUDStartY+(100+plusY)*MenuScale,"SECONDS",True,False
 			
 			temp% = CreatePivot() : temp2% = CreatePivot()
 			PositionEntity temp, EntityX(Collider), EntityY(Collider), EntityZ(Collider)
@@ -11544,25 +11535,25 @@ Function RenderWorld2()
 			
 			Color 0,0,55
 			For k=0 To 10
-				Rect 45,GraphicHeight*0.5-(k*20),54,10,True
+				Rect HUDStartX+45,GraphicHeight*0.5-(k*20),54,10,True
 			Next
 			Color 0,0,255
 			For l=0 To Floor((power%+50)*0.01)
-				Rect 45,GraphicHeight*0.5-(l*20),54,10,True
+				Rect HUDStartX+45,GraphicHeight*0.5-(l*20),54,10,True
 			Next
-			DrawImage NVGImages,40,GraphicHeight*0.5+30,1
+			DrawImage NVGImages,HUDStartX+40,GraphicHeight*0.5+30,1
 			
 			Color 255,255,255
 		ElseIf WearingNightVision=1 And hasBattery<>0
 			Color 0,55,0
 			For k=0 To 10
-				Rect 45,GraphicHeight*0.5-(k*20),54,10,True
+				Rect HUDStartX+45,GraphicHeight*0.5-(k*20),54,10,True
 			Next
 			Color 0,255,0
 			For l=0 To Floor((power%+50)*0.01)
-				Rect 45,GraphicHeight*0.5-(l*20),54,10,True
+				Rect HUDStartX+45,GraphicHeight*0.5-(l*20),54,10,True
 			Next
-			DrawImage NVGImages,40,GraphicHeight*0.5+30,0
+			DrawImage NVGImages,HUDStartX+40,GraphicHeight*0.5+30,0
 		EndIf
 	EndIf
 	
@@ -11953,7 +11944,7 @@ End Function
 
 Function PlayStartupVideos()
 
-	If GetOptionInt("options","play startup video") = 0 Lor IsRestart Then Return
+	If GetOptionInt("general","play startup video") = 0 Lor IsRestart Then Return
 
 	PlayMovie("GFX\menu\startup_Undertow")
 	PlayMovie("GFX\menu\startup_TSS")

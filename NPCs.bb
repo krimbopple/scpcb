@@ -4996,7 +4996,14 @@ Function UpdateNPCs()
 					If CollisionY(n\Collider, i) < EntityY(n\Collider) - 0.01 Then CollidedFloor = True : Exit
 				Next
 				
-				If CollidedFloor = True Then
+				; force NPCs To always touch the Floor when close To player, this is stupid but it will fix the floating bodies.
+				If Not CollidedFloor And gravityDist < 20.0 Then
+					n\DropSpeed# = Max(n\DropSpeed - 0.005*FPSfactor*n\GravityMult, -n\MaxGravity)
+					
+					If n\DropSpeed > -n\MaxGravity*0.5 Then
+						n\DropSpeed = n\DropSpeed - 0.01*FPSfactor*n\GravityMult
+					EndIf
+				ElseIf CollidedFloor = True Then
 					n\DropSpeed# = 0
 				Else
 					If ShouldEntitiesFall

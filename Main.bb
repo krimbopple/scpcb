@@ -5026,6 +5026,8 @@ Function DrawGUI()
 				SetFont Font4
 				Text GraphicWidth/2, y+124*scale, KeypadInput,True,True	
 			EndIf
+
+			SetFont Font1
 			
 			x = x+44*scale
 			y = y+249*scale

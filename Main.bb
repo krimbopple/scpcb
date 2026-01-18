@@ -8631,12 +8631,16 @@ Function InitNewGame()
 				de.Decals = CreateDecal(Rand(2, 3), EntityX(r\obj)+Rnd(- 2,2), 0.003, EntityZ(r\obj)+Rnd(-2,2), 90, Rand(360), 0)
 				de\Size = Rnd(0.1, 0.4) : ScaleSprite(de\obj, de\Size, de\Size)
 				EntityAlpha(de\obj, Rnd(0.85, 0.95))
+				SnapForward(de\obj, 5)
+				TranslateEntity(de\obj, 0, 0.003, 0)
 			EndIf
 			
 			If Rand(4) = 1 Then
 				de.Decals = CreateDecal(0, EntityX(r\obj)+Rnd(- 2,2), 0.003, EntityZ(r\obj)+Rnd(-2,2), 90, Rand(360), 0)
 				de\Size = Rnd(0.5, 0.7) : EntityAlpha(de\obj, 0.7) : de\ID = 1 : ScaleSprite(de\obj, de\Size, de\Size)
 				EntityAlpha(de\obj, Rnd(0.7, 0.85))
+				SnapForward(de\obj, 5)
+				TranslateEntity(de\obj, 0, 0.003, 0)
 			EndIf
 		EndIf
 		

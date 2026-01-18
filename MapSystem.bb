@@ -2021,6 +2021,7 @@ Function CreateRoom.Rooms(zone%, roomshape%, x#, y#, z#, angle%, name$)
 				
 				r\angle = angle
 				If angle <> 0 Then TurnEntity(r\obj, 0, angle, 0)
+				CalculateRoomExtents(r)
 				Return r
 			EndIf
 		Next
@@ -2063,6 +2064,7 @@ Function CreateRoom.Rooms(zone%, roomshape%, x#, y#, z#, angle%, name$)
 					
 					r\angle = angle
 					If angle <> 0 Then TurnEntity(r\obj, 0, angle, 0)
+					CalculateRoomExtents(r)
 					Return r
 				End If
 			EndIf
@@ -7462,7 +7464,6 @@ Function CreateMap()
 				Else ;If zone = 3
 					r = CreateRoom(zone, ROOM2, x * 8, 0, y * 8, 0, "checkpoint2")
 				EndIf
-				CalculateRoomExtents(r)
 			ElseIf MapTemp(x, y) > 0
 				Local angle%
 
@@ -7541,27 +7542,22 @@ Function CreateMap()
 						r = CreateRoom(zone, ROOM4, x * 8, 0, y * 8, 0, MapName(x, y))
 						MapRoomID(ROOM4)=MapRoomID(ROOM4)+1
 				End Select
-				CalculateRoomExtents(r)
 			EndIf
 		Next
 	Next		
 	
 	r = CreateRoom(0, ROOM1, (MapWidth-1) * 8, 500, 8, 0, "gatea")
-	CalculateRoomExtents(r)
 	MapRoomID(ROOM1)=MapRoomID(ROOM1)+1
 	
 	r = CreateRoom(0, ROOM1, (MapWidth-1) * 8, 0, (MapHeight-1) * 8, 0, "pocketdimension")
-	CalculateRoomExtents(r)
 	MapRoomID(ROOM1)=MapRoomID(ROOM1)+1	
 	
 	If IntroEnabled
 		r = CreateRoom(0, ROOM1, 8, 0, (MapHeight-1) * 8, 0, "173")
-		CalculateRoomExtents(r)
 		MapRoomID(ROOM1)=MapRoomID(ROOM1)+1
 	EndIf
 	
 	r = CreateRoom(0, ROOM1, 8, 800, 0, 0, "dimension1499")
-	CalculateRoomExtents(r)
 	MapRoomID(ROOM1)=MapRoomID(ROOM1)+1
 	
 	For r.Rooms = Each Rooms

@@ -6830,8 +6830,8 @@ Function DrawGUI()
 							If SelectedItem\itemtemplate\name = "S-NAV Navigator" Then Color(100, 0, 0)
 							Rect xx+80,yy+70,270,230,False
 							
-							x = GraphicWidth - ImageWidth(SelectedItem\itemtemplate\img)*0.5+20
-							y = GraphicHeight - ImageHeight(SelectedItem\itemtemplate\img)*0.4-85
+							x = HUDEndX - ImageWidth(SelectedItem\itemtemplate\img)*0.5+20
+							y = HUDEndY - ImageHeight(SelectedItem\itemtemplate\img)*0.4-85
 							
 							If SelectedItem\itemtemplate\name = "S-NAV Navigator" Then 
 								Color(100, 0, 0)

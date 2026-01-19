@@ -2021,6 +2021,7 @@ Function CreateRoom.Rooms(zone%, roomshape%, x#, y#, z#, angle%, name$)
 				
 				r\angle = angle
 				If angle <> 0 Then TurnEntity(r\obj, 0, angle, 0)
+				CalculateRoomExtents(r)
 				Return r
 			EndIf
 		Next
@@ -2063,6 +2064,7 @@ Function CreateRoom.Rooms(zone%, roomshape%, x#, y#, z#, angle%, name$)
 					
 					r\angle = angle
 					If angle <> 0 Then TurnEntity(r\obj, 0, angle, 0)
+					CalculateRoomExtents(r)
 					Return r
 				End If
 			EndIf
@@ -7409,7 +7411,7 @@ Function CreateMap()
 	For rs = ROOM1 To ROOM4
 		For z = 1 To ZONEAMOUNT
 			MinPositions(rs, z) = 0
-			MaxPositions(rs, z) = RoomAmounts(rs, 1)-1
+			MaxPositions(rs, z) = RoomAmounts(rs, 1)
 			If z > 1 Then
 				MinPositions(rs, z) = MinPositions(rs, z) + RoomAmounts(rs, 1)
 				MaxPositions(rs, z) = MaxPositions(rs, z) + RoomAmounts(rs, 2)
@@ -7462,7 +7464,6 @@ Function CreateMap()
 				Else ;If zone = 3
 					r = CreateRoom(zone, ROOM2, x * 8, 0, y * 8, 0, "checkpoint2")
 				EndIf
-				CalculateRoomExtents(r)
 			ElseIf MapTemp(x, y) > 0
 				Local angle%
 
@@ -7541,27 +7542,22 @@ Function CreateMap()
 						r = CreateRoom(zone, ROOM4, x * 8, 0, y * 8, 0, MapName(x, y))
 						MapRoomID(ROOM4)=MapRoomID(ROOM4)+1
 				End Select
-				CalculateRoomExtents(r)
 			EndIf
 		Next
 	Next		
 	
 	r = CreateRoom(0, ROOM1, (MapWidth-1) * 8, 500, 8, 0, "gatea")
-	CalculateRoomExtents(r)
 	MapRoomID(ROOM1)=MapRoomID(ROOM1)+1
 	
 	r = CreateRoom(0, ROOM1, (MapWidth-1) * 8, 0, (MapHeight-1) * 8, 0, "pocketdimension")
-	CalculateRoomExtents(r)
 	MapRoomID(ROOM1)=MapRoomID(ROOM1)+1	
 	
 	If IntroEnabled
 		r = CreateRoom(0, ROOM1, 8, 0, (MapHeight-1) * 8, 0, "173")
-		CalculateRoomExtents(r)
 		MapRoomID(ROOM1)=MapRoomID(ROOM1)+1
 	EndIf
 	
 	r = CreateRoom(0, ROOM1, 8, 800, 0, 0, "dimension1499")
-	CalculateRoomExtents(r)
 	MapRoomID(ROOM1)=MapRoomID(ROOM1)+1
 	
 	For r.Rooms = Each Rooms
@@ -7761,7 +7757,7 @@ End Function
 
 Function SetRoom(room_name$,room_type%,pos%,min_pos%,max_pos%) ;place a room without overwriting others
 	
-	If max_pos<min_pos Then DebugLog "Can't place "+room_name : Return False
+	If max_pos<=min_pos Then DebugLog "Can't place "+room_name : Return False
 	
 	DebugLog "--- SETROOM: "+Upper(room_name)+" ---" + min_pos + " " + max_pos
 	Local placed% = False
@@ -7775,11 +7771,11 @@ Function SetRoom(room_name$,room_type%,pos%,min_pos%,max_pos%) ;place a room wit
 End Function
 
 Function SetRoomUpper(room_name$,room_type%,pos%,max_pos%)
-	If pos>max_pos Return False
+	If pos>=max_pos Return False
 	While MapRoom(room_type,pos)<>""
 		DebugLog "found "+MapRoom(room_type,pos)
 		pos=pos+1
-		If pos>max_pos Then
+		If pos>=max_pos Then
 			Return False
 		EndIf
 	Wend
@@ -7788,7 +7784,7 @@ Function SetRoomUpper(room_name$,room_type%,pos%,max_pos%)
 End Function
 
 Function SetRoomLower(room_name$,room_type%,pos%,min_pos%)
-	If pos<max_pos Return False
+	If pos<min_pos Return False
 	While MapRoom(room_type,pos)<>""
 		DebugLog "found "+MapRoom(room_type,pos) + " " + pos
 		pos=pos-1

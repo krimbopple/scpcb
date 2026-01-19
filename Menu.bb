@@ -224,7 +224,7 @@ Function UpdateMainMenu()
 					If temp Then MainMenuTab = 8
 				Case 3
 					txt = "OPTIONS"
-					If temp Then MainMenuTab = 3
+					If temp Then MainMenuTab = 3 : OnSliderID = 66
 				Case 4
 					txt = "QUIT"
 					If temp Then
@@ -1682,7 +1682,7 @@ Function UpdateLauncher()
 	If Bit16Mode Then
 		PutINIValue(OptionFile, "graphics", "16bit", "true")
 	Else
-		PutINIValue(OptionFile, "optiographicsns", "16bit", "false")
+		PutINIValue(OptionFile, "graphics", "16bit", "false")
 	EndIf
 	PutINIValue(OptionFile, "graphics", "gfx driver", SelectedGFXDriver)
 	
@@ -2527,7 +2527,7 @@ Function DrawOptionsTooltip(x%,y%,width%,height%,option$,value#=0,ingame%=False)
 		Case "consoleerror"
 			txt = Chr(34)+"Open console on error"+Chr(34)+" is self-explanatory."
 		Case "speedrunmode"
-			txt = "Displays a timer and changes how play time is tracked to conform to the requirements of speed running. Timer can be stopped by pressing " + KeyName(KEY_STOP_TIMER) + "."
+			txt = "Displays a timer and changes how play time is tracked to conform to the requirements of speed running."
 		Case "numericseeds"
 			txt = "Allows seeds to be entered as integers, which will be used to directly seed the game's internal random number generator."
 			txt = txt + " When no seed is entered, the elapsed millseconds since the computer started is used."

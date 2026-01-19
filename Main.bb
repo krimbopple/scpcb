@@ -7,7 +7,7 @@
 
 ;    See Credits.txt for a list of contributors
 
-Const VersionNumber$ = "1.3.12-pre6"
+Const VersionNumber$ = "1.3.12-pre7"
 Const CompatibleNumber$ = "1.3.12" ;Only change this if the version given isn't working with the current build version - ENDSHN
 
 InitErrorMsgs(10, True)
@@ -5026,6 +5026,8 @@ Function DrawGUI()
 				SetFont Font4
 				Text GraphicWidth/2, y+124*scale, KeypadInput,True,True	
 			EndIf
+
+			SetFont Font1
 			
 			x = x+44*scale
 			y = y+249*scale
@@ -6828,8 +6830,8 @@ Function DrawGUI()
 							If SelectedItem\itemtemplate\name = "S-NAV Navigator" Then Color(100, 0, 0)
 							Rect xx+80,yy+70,270,230,False
 							
-							x = GraphicWidth - ImageWidth(SelectedItem\itemtemplate\img)*0.5+20
-							y = GraphicHeight - ImageHeight(SelectedItem\itemtemplate\img)*0.4-85
+							x = HUDEndX - ImageWidth(SelectedItem\itemtemplate\img)*0.5+20
+							y = HUDEndY - ImageHeight(SelectedItem\itemtemplate\img)*0.4-85
 							
 							If SelectedItem\itemtemplate\name = "S-NAV Navigator" Then 
 								Color(100, 0, 0)
@@ -7883,7 +7885,7 @@ Function DrawMenu()
 				
 				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Achievements") Then AchievementsMenu = 1
 				y = y + 75*MenuScale
-				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Options") Then OptionsMenu = 1
+				If DrawButton(x, y, 390*MenuScale, 60*MenuScale, "Options") Then OptionsMenu = 1 : OnSliderID = 66
 				y = y + 75*MenuScale
 			Else
 				y = y+104*MenuScale
@@ -8631,12 +8633,16 @@ Function InitNewGame()
 				de.Decals = CreateDecal(Rand(2, 3), EntityX(r\obj)+Rnd(- 2,2), 0.003, EntityZ(r\obj)+Rnd(-2,2), 90, Rand(360), 0)
 				de\Size = Rnd(0.1, 0.4) : ScaleSprite(de\obj, de\Size, de\Size)
 				EntityAlpha(de\obj, Rnd(0.85, 0.95))
+				SnapForward(de\obj, 5)
+				TranslateEntity(de\obj, 0, 0.003, 0)
 			EndIf
 			
 			If Rand(4) = 1 Then
 				de.Decals = CreateDecal(0, EntityX(r\obj)+Rnd(- 2,2), 0.003, EntityZ(r\obj)+Rnd(-2,2), 90, Rand(360), 0)
 				de\Size = Rnd(0.5, 0.7) : EntityAlpha(de\obj, 0.7) : de\ID = 1 : ScaleSprite(de\obj, de\Size, de\Size)
 				EntityAlpha(de\obj, Rnd(0.7, 0.85))
+				SnapForward(de\obj, 5)
+				TranslateEntity(de\obj, 0, 0.003, 0)
 			EndIf
 		EndIf
 		

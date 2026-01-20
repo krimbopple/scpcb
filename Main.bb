@@ -248,7 +248,7 @@ Font5% = LoadFont_Strict("GFX\font\Journal\Journal.ttf", Int(58 * MenuScale))
 
 Global CreditsFont%,CreditsFont2%
 
-ConsoleFont% = LoadFont_Strict("GFX\font\cour\Courier New.ttf", Int(20 * MenuScale))
+ConsoleFont% = Font1
 
 SetFont Font2
 

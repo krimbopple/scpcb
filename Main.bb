@@ -6133,7 +6133,7 @@ Function DrawGUI()
 						BlurTimer = Max(BlurTimer + GetINIInt2(iniStr, loc, "blur")*70, 0);*temp
 						CameraShakeTimer = Max(CameraShakeTimer + GetINIString2(iniStr, loc, "camerashake"), 0)
 						
-						temp = GetINIInt2(iniStr, loc, "vomit")*70
+						temp = GetINIInt2(iniStr, loc, "vomit")
 						If temp > 0 Then
 							If VomitTimer = 0 Then
 								VomitTimer = temp

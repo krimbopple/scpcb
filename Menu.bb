@@ -4,12 +4,10 @@ Global Menu173% = LoadImage_Strict("GFX\menu\173back.jpg")
 MenuWhite = LoadImage_Strict("GFX\menu\menuwhite.jpg")
 MenuBlack = LoadImage_Strict("GFX\menu\menublack.jpg")
 MaskImage MenuBlack, 255,255,0
-Global QuickLoadIcon% = LoadImage_Strict("GFX\menu\QuickLoading.png")
 
 ResizeImage(MenuBack, ImageWidth(MenuBack) * MenuScale, ImageHeight(MenuBack) * MenuScale)
 ResizeImage(MenuText, ImageWidth(MenuText) * MenuScale, ImageHeight(MenuText) * MenuScale)
 ResizeImage(Menu173, ImageWidth(Menu173) * MenuScale, ImageHeight(Menu173) * MenuScale)
-ResizeImage(QuickLoadIcon, ImageWidth(QuickLoadIcon) * MenuScale, ImageHeight(QuickLoadIcon) * MenuScale)
 
 For i = 0 To 3
 	ArrowIMG(i) = LoadImage_Strict("GFX\menu\arrow.png")
@@ -2390,28 +2388,17 @@ Function DrawTooltip(message$)
 End Function
 
 Global QuickLoadPercent% = -1
-Global QuickLoadPercent_DisplayTimer# = 0
 Global QuickLoad_CurrEvent.Events
 
 Function DrawQuickLoading()
 	
 	If QuickLoadPercent > -1
-		MidHandle QuickLoadIcon
-		DrawImage QuickLoadIcon,GraphicWidth-90,GraphicHeight-150
-		Color 255,255,255
-		SetFont Font1
-		Text GraphicWidth-100,GraphicHeight-90,"LOADING: "+QuickLoadPercent+"%",1
 		If QuickLoadPercent > 99
-			If QuickLoadPercent_DisplayTimer < 70
-				QuickLoadPercent_DisplayTimer# = Min(QuickLoadPercent_DisplayTimer+FPSfactor,70)
-			Else
-				QuickLoadPercent = -1
-			EndIf
+			QuickLoadPercent = -1
 		EndIf
 		QuickLoadEvents()
 	Else
 		QuickLoadPercent = -1
-		QuickLoadPercent_DisplayTimer# = 0
 		QuickLoad_CurrEvent = Null
 	EndIf
 	

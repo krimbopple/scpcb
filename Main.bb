@@ -3058,9 +3058,9 @@ While IsRunning
 				EndIf
 				UpdateScreens()
 				TimeCheckpointMonitors()
-				Update294()
 				UpdateRoomLights(Camera)
 			EndIf
+			Update294()
 			UpdateDecals()
 			UpdateMTF()
 			UpdateNPCs()

@@ -7,7 +7,7 @@
 
 ;    See Credits.txt for a list of contributors
 
-Const VersionNumber$ = "1.3.12-pre7"
+Const VersionNumber$ = "1.3.12-pre8"
 Const CompatibleNumber$ = "1.3.12" ;Only change this if the version given isn't working with the current build version - ENDSHN
 
 InitErrorMsgs(10, True)
@@ -31,20 +31,26 @@ End Function
 Include "StrictLoads.bb"
 Include "KeyName.bb"
 
-Global OptionFile$ = InitOptionsDir()
+Global DataDir$ = InitDataDir()
+Global OptionFile$ = InitOptionsFile()
+Global ModsFile$ = DataDir + "\mods.ini"
 Const OptionDefaultFile$ = "defaults.ini"
 
-Function InitOptionsDir$()
+Function InitDataDir$()
 	Local dir$ = GetEnv("AppData") + "\Undertow Games"
 	If FileType(dir) <> 2 Then CreateDir(dir)
 	dir = dir + "\SCP - Containment Breach"
 	If FileType(dir) <> 2 Then CreateDir(dir)
-	dir = dir + "\options.ini"
-	If FileType(dir) <> 1 Then
-		Local f% = WriteFile(dir)
+	Return dir
+End Function
+
+Function InitOptionsFile$()
+	Local file$ = DataDir + "\options.ini"
+	If FileType(file) <> 1 Then
+		Local f% = WriteFile(file)
 		CloseFile(f)
 	EndIf
-	Return dir
+	Return file
 End Function
 
 Function GetOptionString$(section$, key$)
@@ -248,7 +254,7 @@ Font5% = LoadFont_Strict("GFX\font\Journal\Journal.ttf", Int(58 * MenuScale))
 
 Global CreditsFont%,CreditsFont2%
 
-ConsoleFont% = LoadFont_Strict("GFX\font\cour\Courier New.ttf", Int(20 * MenuScale))
+ConsoleFont% = Font1
 
 SetFont Font2
 
@@ -472,12 +478,7 @@ Function UpdateConsole()
 			EndIf
 		EndIf
 		
-		mouseScroll = MouseZSpeed()
-		If mouseScroll=1 Then
-			ConsoleScroll = ConsoleScroll - 15*MenuScale
-		ElseIf mouseScroll=-1 Then
-			ConsoleScroll = ConsoleScroll + 15*MenuScale
-		EndIf
+		ConsoleScroll = ConsoleScroll - 15*MenuScale * MouseZSpeed()
 		
 		Local reissuePos%
 		If KeyHit(200) Then
@@ -900,6 +901,7 @@ Function UpdateConsole()
 					;[Block]
 					Injuries = 0
 					Bloodloss = 0
+					ResetDiseases()
 					;[End Block]
 				Case "teleport"
 					;[Block]
@@ -1566,13 +1568,13 @@ Function UpdateConsole()
 				If TempY >= y And TempY < y + height - 20*MenuScale Then
 					If cm=ConsoleReissue Then
 						Color cm\r/4,cm\g/4,cm\b/4
-						Rect x,TempY-2*MenuScale,width-30*MenuScale,24*MenuScale,True
+						Rect x+3*MenuScale,TempY-2*MenuScale,width-30*MenuScale,24*MenuScale,True
 					EndIf
 					Color cm\r,cm\g,cm\b
 					If cm\isCommand Then
-						Text(x + 20*MenuScale, TempY, "> "+cm\txt)
+						Text(x + 20*MenuScale, TempY+5*MenuScale, "> "+cm\txt)
 					Else
-						Text(x + 20*MenuScale, TempY, cm\txt)
+						Text(x + 20*MenuScale, TempY+5*MenuScale, cm\txt)
 					EndIf
 				EndIf
 				TempY = TempY - 15*MenuScale
@@ -1824,6 +1826,7 @@ Global NVGImages = LoadAnimImage("GFX\battery.png",64,64,0,2)
 MaskImage NVGImages,255,0,255
 
 Global Wearing1499% = False
+Global AmbientLight%, AmbientLightNVG%
 Global AmbientLightRoomTex%, AmbientLightRoomVal%
 
 Global EnableUserTracks% = GetOptionInt("audio", "enable user tracks")
@@ -1895,8 +1898,6 @@ Global HandIcon%
 Global HandIcon2%
 
 Global StaminaMeterIMG%
-
-Global KeypadHUD
 
 Global Panel294, Using294%, Input294$
 
@@ -3063,9 +3064,9 @@ While IsRunning
 				EndIf
 				UpdateScreens()
 				TimeCheckpointMonitors()
-				Update294()
 				UpdateRoomLights(Camera)
 			EndIf
+			Update294()
 			UpdateDecals()
 			UpdateMTF()
 			UpdateNPCs()
@@ -4634,17 +4635,17 @@ Function MouseLook()
 		ShowEntity(NVOverlay)
 		If WearingNightVision=2 Then
 			EntityColor(NVOverlay, 0,100,255)
-			AmbientLightRooms(15)
+			AmbientLightRooms(AmbientLightNVG)
 		ElseIf WearingNightVision=3 Then
 			EntityColor(NVOverlay, 255,0,0)
-			AmbientLightRooms(15)
+			AmbientLightRooms(AmbientLightNVG)
 		Else
 			EntityColor(NVOverlay, 0,255,0)
-			AmbientLightRooms(15)
+			AmbientLightRooms(AmbientLightNVG)
 		EndIf
 		EntityTexture(Fog, FogNVTexture)
 	Else
-		AmbientLightRooms(0)
+		AmbientLightRooms(AmbientLight)
 		HideEntity(NVOverlay)
 		EntityTexture(Fog, FogTexture)
 	EndIf
@@ -5008,9 +5009,14 @@ Function DrawGUI()
 			CameraProject(Camera, EntityX(ClosestButton,True),EntityY(ClosestButton,True)-MeshHeight(ButtonOBJ)*0.015,EntityZ(ClosestButton,True))
 			scale# = (ProjectedY()-projy)/462.0
 			
-			x = GraphicWidth/2-ImageWidth(KeypadHUD)*scale/2
-			y = GraphicHeight/2-ImageHeight(KeypadHUD)*scale/2		
+			x = GraphicWidth/2-317*scale/2
+			y = GraphicHeight/2-462*scale/2
 			
+			Select True
+				Case WearingNightVision=1 Color 0,255,0
+				Case WearingNightVision=2 Color 0,0,255
+				Case WearingNightVision=3 Color 255,0,0
+			End Select
 			SetFont Font3
 			If KeypadMSG <> "" Then 
 				KeypadTimer = KeypadTimer-FPSfactor2
@@ -5839,16 +5845,7 @@ Function DrawGUI()
 						EndIf
 						MsgTimer = 70*7
 						
-						DeathTimer = 0
-						Infect = 0
-						Stamina = 100
-						For i = 0 To 5
-							SCP1025state[i]=0
-						Next
-						If StaminaEffect > 1.0 Then
-							StaminaEffect = 1.0
-							StaminaEffectTimer = 0.0
-						EndIf
+						ResetDiseases()
 						
 						RemoveItem(SelectedItem)
 						SelectedItem = Null
@@ -6134,7 +6131,7 @@ Function DrawGUI()
 						BlurTimer = Max(BlurTimer + GetINIInt2(iniStr, loc, "blur")*70, 0);*temp
 						CameraShakeTimer = Max(CameraShakeTimer + GetINIString2(iniStr, loc, "camerashake"), 0)
 						
-						temp = GetINIInt2(iniStr, loc, "vomit")*70
+						temp = GetINIInt2(iniStr, loc, "vomit")
 						If temp > 0 Then
 							If VomitTimer = 0 Then
 								VomitTimer = temp
@@ -7214,6 +7211,19 @@ Function DrawGUI()
 	CatchErrors("DrawGUI")
 End Function
 
+Function ResetDiseases()
+	DeathTimer = 0
+	Infect = 0
+	Stamina = 100
+	For i = 0 To 5
+		SCP1025state[i]=0
+	Next
+	If StaminaEffect > 1.0 Then
+		StaminaEffect = 1.0
+		StaminaEffectTimer = 0.0
+	EndIf
+End Function
+
 Function DrawTimer()
 	SetFont(Font2)
 	Local durText$
@@ -8007,11 +8017,8 @@ Function LoadEntities()
 	StaminaMeterIMG% = LoadImage_Strict("GFX\staminameter.jpg")
 	ScaleImage(StaminaMeterIMG, HUDScale, HUDScale)
 
-	KeypadHUD =  LoadImage_Strict("GFX\keypadhud.jpg")
-	MaskImage(KeypadHUD, 255,0,255)
-
 	Panel294 = LoadImage_Strict("GFX\294panel.jpg")
-	MaskImage(Panel294, 255,0,255)
+	ScaleImage(Panel294, HUDScale, HUDScale)
 	
 	
 	Brightness% = GetModdedINIFloat(MapOptions, "facility", "brightness")
@@ -8022,6 +8029,9 @@ Function LoadEntities()
 	;TextureLodBias
 	
 	AmbientLightRoomTex% = CreateTexture(2,2,257)
+	AmbientLight = GetModdedINIInt(MapOptions, "facility", "ambient light")
+	AmbientLightNVG = GetModdedINIInt(MapOptions, "facility", "ambient light nvg")
+
 	TextureBlend AmbientLightRoomTex,5
 	SetBuffer(TextureBuffer(AmbientLightRoomTex))
 	ClsColor 0,0,0
@@ -10245,12 +10255,13 @@ Function Use294()
 	temp = True
 	If PlayerRoom\SoundCHN<>0 Then temp = False
 	
-	Text x+905, y+185, Right(Input294,13), True,True
+	Color 255, 255, 255
+	Text x+903*HUDScale, y+185*HUDScale, Right(Input294,13), True,True
 	
 	If temp Then
 		If MouseHit1 Then
-			xtemp = Floor((ScaledMouseX()-x-228) / 35.5)
-			ytemp = Floor((ScaledMouseY()-y-342) / 36.5)
+			xtemp = Floor((ScaledMouseX()-x-228*HUDScale) / 35.5 / HUDScale)
+			ytemp = Floor((ScaledMouseY()-y-342*HUDScale) / 36.5 / HUDScale)
 			
 			temp = False
 			
@@ -10631,7 +10642,7 @@ End Function
 Function UpdateInfect()
 	Local temp#, i%, r.Rooms
 	
-	Local teleportForInfect% = True
+	Local teleportForInfect% = Not GodMode
 	
 	If PlayerRoom\RoomTemplate\Name = "room860"
 		For e.Events = Each Events
@@ -11537,6 +11548,8 @@ Function RenderWorld2()
 				EndIf
 			Next
 			
+			SetFont Font1
+			
 			FreeEntity (temp) : FreeEntity (temp2)
 			
 			Color 0,0,55
@@ -11576,6 +11589,7 @@ Function RenderWorld2()
 			
 			Text GraphicWidth/2,20*MenuScale,"WARNING: LOW BATTERY",True,False
 			Color 255,255,255
+			SetFont Font1
 		EndIf
 	EndIf
 End Function

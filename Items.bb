@@ -127,7 +127,7 @@ Function InitItemTemplatesFromFile(file$)
 	Local f% = OpenFile(file)
 	While Not Eof(f)
 		Local l$ = Trim(ReadLine(f))
-		If l <> "" And Instr(l, "#") <> 1 Then
+		If l <> "" And Instr(l, "#") <> 1 And Instr(l, ";") <> 1 Then
 			Local splitterPos = Instr(l, "=")
 			If splitterPos = 0 And Instr(l, "[") = 1 Then
 				If name <> "" Then
@@ -758,8 +758,8 @@ Function Update294()
 			VomitCHN = PlaySound_Strict(VomitSFX)
 			PrevInjuries = Injuries
 			PrevBloodloss = Bloodloss
-			Injuries = 1.5
-			Bloodloss = 70
+			Injuries = Injuries + 1.5
+			Bloodloss = Bloodloss + 70
 			EyeIrritation = 9 * 70
 			
 			pvt = CreatePivot()

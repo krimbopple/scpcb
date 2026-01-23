@@ -1596,7 +1596,7 @@ Function LoadRoomTemplates(file$)
 			Next
 
 			If rt = Null Then rt = CreateRoomTemplate(l)
-		Else If l <> "" And Instr(l, ";") <> 1 Then
+		Else If l <> "" And Instr(l, "#") <> 1 And Instr(l, ";") <> 1 Then
 			Local splitterPos% = Instr(l, "=")
 			Local key$ = Lower(Trim(Left(l, splitterPos - 1)))
 			Local value$ = Trim(Right(l, Len(l) - splitterPos))
@@ -5043,6 +5043,8 @@ Function FillRoom(r.Rooms)
 			PositionEntity(d\buttons[1], r\x + 304.0 * RoomScale, EntityY(d\buttons[1],True), r\z + 840.0 * RoomScale, True)	
 			TurnEntity d\buttons[1],0,0,0,True
 			d.Doors = CreateDoor(r\zone, r\x -512.0 * RoomScale, -768.0*RoomScale, r\z -336.0 * RoomScale, 0, r, False, False, 3)
+			MoveEntity(d\buttons[0], 0, 0, 10)
+			MoveEntity(d\buttons[1], 0, 0, 10)
 			d.Doors = CreateDoor(r\zone, r\x -509.0 * RoomScale, -768.0*RoomScale, r\z -1037.0 * RoomScale, 0, r, False, False, 3)
 			d.Doors\locked = True
 			d.Doors\DisableWaypoint = True
@@ -7425,8 +7427,8 @@ Function CreateMap()
 	
 	MapRoom(ROOM1, 0) = "start"	
 	
-	MapRoom(ROOM1, MaxPositions(ROOM1, 3)-1) = "exit1"
-	MapRoom(ROOM1, MaxPositions(ROOM1, 3)) = "gateaentrance"
+	MapRoom(ROOM1, MaxPositions(ROOM1, 3)-2) = "exit1"
+	MapRoom(ROOM1, MaxPositions(ROOM1, 3)-1) = "gateaentrance"
 	
 	For rt.RoomTemplates = Each RoomTemplates
 		If rt\SetRoom >= 0 Then
